@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/*
+ * Fondations de la charte des interfaces (backend/docs/charte-interfaces.md, 1.2).
+ * Une seule couleur de marque (rouge brique), des gris neutres, de petits arrondis.
+ */
+:root {
+  --background: oklch(99% 0.002 60);
+  --foreground: oklch(22% 0.01 60);
+  --muted: oklch(48% 0.01 60);
+  --border: oklch(90% 0.005 60);
+  --accent: oklch(58% 0.15 35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(17% 0.005 60);
+    --foreground: oklch(94% 0.005 60);
+    --muted: oklch(70% 0.01 60);
+    --border: oklch(30% 0.008 60);
+    --accent: oklch(68% 0.14 38);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
