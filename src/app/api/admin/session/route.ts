@@ -1,35 +1,70 @@
 import { cookies } from "next/headers";
-import { ADMIN_COOKIE, backendAdmin } from "@/lib/admin";
+import { ADMIN_COOKIE, backend } from "@/lib/admin";
 
-/** Connexion au tableau de bord : le jeton est vérifié auprès du serveur, puis gardé dans un cookie. */
+const unreachable = () =>
+  Response.json({ error: "Le serveur <br/> ne répond pas." }, { status: 502 });
+
+/** Connexion au tableau de bord par adresse et mot de passe ; la session est gardée dans un cookie. */
 export async function POST(request: Request) {
-  const { token } = (await request.json().catch(() => ({}))) as {
-    token?: unknown;
+  const body = (await request.json().catch(() => ({}))) as {
+    email?: unknown;
+    password?: unknown;
   };
-  if (typeof token !== "string" || token.length < 16) {
-    return Response.json({ error: "Jeton invalide." }, { status: 400 });
-  }
-  const check = await backendAdmin("overview", token).catch(() => null);
-  if (!check)
+  if (typeof body.email !== "string" || typeof body.password !== "string") {
     return Response.json(
-      { error: "Le serveur <br/> ne répond pas." },
-      { status: 502 },
+      { error: "Adresse et mot de passe requis." },
+      { status: 400 },
     );
-  if (!check.ok)
-    return Response.json({ error: "Jeton refusé." }, { status: 401 });
+  }
+  const response = await backend("admin-auth/login", null, {
+    method: "POST",
+    body: JSON.stringify({ email: body.email, password: body.password }),
+  }).catch(() => null);
+  if (!response) return unreachable();
+  const json = (await response.json().catch(() => ({}))) as {
+    token?: string;
+    expiresAt?: string;
+    admin?: { email: string; name: string };
+    error?: { message?: string };
+  };
+  if (!response.ok || !json.token) {
+    return Response.json(
+      { error: json.error?.message ?? "Connexion impossible." },
+      { status: response.status },
+    );
+  }
 
-  (await cookies()).set(ADMIN_COOKIE, token, {
+  (await cookies()).set(ADMIN_COOKIE, json.token, {
     httpOnly: true,
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 12 * 60 * 60,
+    expires: json.expiresAt ? new Date(json.expiresAt) : undefined,
   });
-  return Response.json({ ok: true });
+  return Response.json({ admin: json.admin });
 }
 
-/** Déconnexion du tableau de bord. */
+/** Le compte connecté, pour l'en-tête du tableau de bord. */
+export async function GET() {
+  const session = (await cookies()).get(ADMIN_COOKIE)?.value ?? null;
+  if (!session)
+    return Response.json({ error: "Connexion requise." }, { status: 401 });
+  const response = await backend("admin-auth/me", session).catch(() => null);
+  if (!response) return unreachable();
+  return new Response(response.body, {
+    status: response.status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+/** Déconnexion : la session est révoquée sur le serveur, puis le cookie effacé. */
 export async function DELETE() {
-  (await cookies()).delete(ADMIN_COOKIE);
+  const store = await cookies();
+  const session = store.get(ADMIN_COOKIE)?.value ?? null;
+  if (session)
+    await backend("admin-auth/logout", session, { method: "POST" }).catch(
+      () => null,
+    );
+  store.delete(ADMIN_COOKIE);
   return Response.json({ ok: true });
 }

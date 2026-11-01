@@ -1,23 +1,23 @@
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
-import { ADMIN_COOKIE, backendAdmin } from "@/lib/admin";
+import { ADMIN_COOKIE, backend } from "@/lib/admin";
 
 /**
- * Relais du tableau de bord vers les routes /admin du serveur <br/> : le jeton, gardé dans
- * un cookie réservé au serveur du site, est ajouté ici et ne passe jamais par la page.
+ * Relais du tableau de bord vers les routes /admin du serveur <br/> : la session, gardée dans
+ * un cookie réservé au serveur du site, est ajoutée ici et ne passe jamais par la page.
  */
 async function relay(
   request: NextRequest,
   ctx: RouteContext<"/api/admin/[...path]">,
 ) {
-  const token = (await cookies()).get(ADMIN_COOKIE)?.value;
-  if (!token)
+  const session = (await cookies()).get(ADMIN_COOKIE)?.value;
+  if (!session)
     return Response.json({ error: "Connexion requise." }, { status: 401 });
   const { path } = await ctx.params;
   const body = request.method === "GET" ? undefined : await request.text();
-  const response = await backendAdmin(
-    `${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`,
-    token,
+  const response = await backend(
+    `admin/${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`,
+    session,
     {
       method: request.method,
       body: body || undefined,

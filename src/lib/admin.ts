@@ -4,22 +4,22 @@ export const BACKEND_URL = (
 ).replace(/\/+$/, "");
 
 /**
- * Cookie qui garde le jeton d'administration. Il est réservé au serveur du site (httpOnly) :
- * le JavaScript de la page n'y a jamais accès.
+ * Cookie qui garde la session du tableau de bord. Il est réservé au serveur du site
+ * (httpOnly) : le JavaScript de la page n'y a jamais accès.
  */
 export const ADMIN_COOKIE = "bria_admin";
 
-/** Appelle une route /admin du serveur <br/> avec le jeton d'administration. */
-export function backendAdmin(
+/** Appelle le serveur <br/> avec la session d'un compte de l'équipe interne. */
+export function backend(
   path: string,
-  token: string,
+  session: string | null,
   init: RequestInit = {},
 ): Promise<Response> {
-  return fetch(`${BACKEND_URL}/admin/${path}`, {
+  return fetch(`${BACKEND_URL}/${path}`, {
     ...init,
     headers: {
       ...(init.body ? { "Content-Type": "application/json" } : {}),
-      "x-admin-token": token,
+      ...(session ? { "x-admin-session": session } : {}),
     },
     cache: "no-store",
   });

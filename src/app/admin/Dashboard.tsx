@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   BarChart3,
   ChevronLeft,
   LayoutDashboard,
@@ -15,7 +16,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
-import { Emblem, Logo } from "../Logo";
+import { Emblem } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { api, SignedOut } from "./api";
 import { MaintenanceSection } from "./maintenance";
@@ -27,7 +28,7 @@ import {
   UsersSection,
 } from "./sections";
 import { FeedbackSection, SettingsSection } from "./settings";
-import { Button, ErrorText, inputClass } from "./ui";
+import { ErrorText, Field, inputClass } from "./ui";
 
 const SECTIONS = [
   { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
@@ -55,7 +56,19 @@ export function Dashboard() {
   );
   const [section, setSection] = useState<SectionId>("vue-d-ensemble");
   const [collapsed, setCollapsed] = useState(false);
+  const [adminName, setAdminName] = useState<string | null>(null);
   const signedOut = useCallback(() => setState("signedOut"), []);
+
+  // Le nom du compte connecté, pour la barre du haut.
+  useEffect(() => {
+    if (state !== "signedIn") return;
+    fetch("/api/admin/session")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json: { admin?: { name: string } } | null) =>
+        setAdminName(json?.admin?.name ?? null),
+      )
+      .catch(() => setAdminName(null));
+  }, [state]);
 
   useEffect(() => {
     // La section suit l'adresse (#utilisateurs…) : une page rechargée y revient.
@@ -160,7 +173,7 @@ export function Dashboard() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <span className="hidden text-sm text-muted sm:inline">
-              Équipe interne
+              {adminName ?? "Équipe interne"}
             </span>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#1860a0] to-[#0e385e] text-white">
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
@@ -195,9 +208,13 @@ export function Dashboard() {
   );
 }
 
-/** Connexion par le jeton d'administration (variable ADMIN_TOKEN du serveur). */
+/**
+ * Connexion de l'équipe interne : l'emblème en haut, le nom et la devise juste en dessous,
+ * puis la carte de connexion par adresse e-mail et mot de passe.
+ */
 function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
-  const [token, setToken] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -208,10 +225,11 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     const response = await fetch("/api/admin/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: token.trim() }),
+      body: JSON.stringify({ email: email.trim(), password }),
     }).catch(() => null);
     setBusy(false);
     if (response?.ok) {
+      setPassword("");
       onSignedIn();
       return;
     }
@@ -220,31 +238,56 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
-      <ThemeToggle className="absolute top-4 right-4" />
-      <main className="w-full max-w-sm rounded-2xl bg-card p-8 shadow-sm ring-1 ring-border">
-        <Logo className="mx-auto mb-6 h-auto w-60" />
-        <h1 className="text-center text-xl font-bold tracking-tight">
-          Administration
-        </h1>
-        <p className="mt-1 mb-6 text-center text-sm text-muted">
-          Réservé à l'équipe interne. Saisissez le jeton d'administration du
-          serveur.
+    <div className="relative flex min-h-screen flex-col items-center px-4 py-12">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle withLabel />
+      </div>
+
+      <Emblem className="mt-4 h-32 w-32 sm:h-36 sm:w-36" />
+      <h1 className="mt-6 text-center text-4xl font-bold tracking-tight sm:text-5xl">
+        Retour à la ligne
+      </h1>
+      <p className="mt-4 max-w-md text-center text-lg text-muted">
+        Redonner un sens au travail d'équipe.
+      </p>
+
+      <main className="mt-10 w-full max-w-md rounded-3xl bg-card p-8 shadow-lg shadow-accent/5 ring-1 ring-border sm:p-10">
+        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent ring-1 ring-accent/20">
+          <ShieldCheck className="h-7 w-7" aria-hidden="true" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Administration</h2>
+        <p className="mt-2 mb-6 text-muted">
+          Espace réservé à l'équipe interne de {"<br/>"}.
         </p>
-        <form className="flex flex-col gap-3" onSubmit={submit}>
-          <input
-            type="password"
-            autoComplete="off"
-            className={inputClass}
-            placeholder="Jeton d'administration"
-            aria-label="Jeton d'administration"
-            value={token}
-            onChange={(event) => setToken(event.target.value)}
-          />
+        <form className="flex flex-col gap-4" onSubmit={submit}>
+          <Field label="Adresse e-mail">
+            <input
+              type="email"
+              autoComplete="username"
+              className={`${inputClass} h-11`}
+              placeholder="nom@exemple.org"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </Field>
+          <Field label="Mot de passe">
+            <input
+              type="password"
+              autoComplete="current-password"
+              className={`${inputClass} h-11`}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </Field>
           <ErrorText>{error}</ErrorText>
-          <Button kind="primary" type="submit" disabled={busy || !token.trim()}>
+          <button
+            type="submit"
+            disabled={busy || !email.trim() || !password}
+            className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-50"
+          >
             Se connecter
-          </Button>
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
         </form>
       </main>
     </div>
