@@ -3,6 +3,7 @@
 import {
   ArrowRight,
   BarChart3,
+  ChartNoAxesCombined,
   ChevronLeft,
   Eye,
   Inbox,
@@ -10,6 +11,7 @@ import {
   LogOut,
   Menu,
   MessageSquareText,
+  ScrollText,
   Settings,
   ShieldCheck,
   TicketPercent,
@@ -24,6 +26,7 @@ import { ThemeToggle } from "../ThemeToggle";
 import { AdminsSection } from "./admins";
 import { api, SignedOut } from "./api";
 import { BetaRequestsSection } from "./beta";
+import { JournalSection } from "./journal";
 import { MaintenanceSection } from "./maintenance";
 import { initials, levelOf, type Me } from "./permissions";
 import { ProfileSection } from "./profile";
@@ -35,6 +38,7 @@ import {
   UsersSection,
 } from "./sections";
 import { FeedbackSection, SettingsSection } from "./settings";
+import { StatisticsSection } from "./statistics";
 import {
   ErrorText,
   Field,
@@ -49,6 +53,7 @@ const GROUPS = [
     label: "Pilotage",
     items: [
       { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
+      { id: "statistiques", label: "Statistiques", icon: ChartNoAxesCombined },
       { id: "couts", label: "Coûts d'IA", icon: BarChart3 },
     ],
   },
@@ -73,6 +78,7 @@ const GROUPS = [
       { id: "maintenance", label: "Maintenance", icon: Wrench },
       { id: "reglages", label: "Réglages", icon: Settings },
       { id: "comptes", label: "Équipe interne", icon: UserCog },
+      { id: "journal", label: "Journal", icon: ScrollText },
     ],
   },
 ] as const;
@@ -298,6 +304,12 @@ export function Dashboard() {
               )}
               {shown === "vue-d-ensemble" && (
                 <OverviewSection onSignedOut={signedOut} onOpen={go} />
+              )}
+              {shown === "statistiques" && (
+                <StatisticsSection onSignedOut={signedOut} />
+              )}
+              {shown === "journal" && (
+                <JournalSection onSignedOut={signedOut} />
               )}
               {shown === "utilisateurs" && (
                 <UsersSection onSignedOut={signedOut} />

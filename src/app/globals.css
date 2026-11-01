@@ -23,6 +23,23 @@
   --primary: #1860a0;
   --warm: #de791a;
   --danger: #c2372e;
+  /* Graphiques : palette validée (dataviz) sur la carte blanche. L'aqua passe sous 3:1,
+     d'où la légende et la vue en tableau de chaque graphique. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --grid: #ececec;
+  --heat-0: #f1f1f1;
+  --heat-1: #cde2fb;
+  --heat-2: #86b6ef;
+  --heat-3: #3987e5;
+  --heat-4: #256abf;
+  --heat-5: #104281;
+  /* États (réussi, en attente, arrêté, échoué) : jamais réutilisés pour une série. */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
 }
 
 .dark {
@@ -38,6 +55,20 @@
   --primary: #1860a0;
   --warm: #faa03a;
   --danger: #f2837a;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --grid: #2a2a2a;
+  --heat-0: #232323;
+  --heat-1: #0d366b;
+  --heat-2: #184f95;
+  --heat-3: #256abf;
+  --heat-4: #3987e5;
+  --heat-5: #86b6ef;
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
 }
 
 @theme inline {

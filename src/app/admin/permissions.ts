@@ -5,6 +5,7 @@
  * ouverts à tous.
  */
 export const PERMISSIONS = [
+  { id: "statistiques", label: "Statistiques" },
   { id: "utilisateurs", label: "Utilisateurs" },
   { id: "equipes", label: "Équipes" },
   { id: "couts", label: "Coûts d'IA" },
@@ -14,6 +15,7 @@ export const PERMISSIONS = [
   { id: "maintenance", label: "Maintenance" },
   { id: "comptes", label: "Équipe interne" },
   { id: "reglages", label: "Réglages" },
+  { id: "journal", label: "Journal" },
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number]["id"];
