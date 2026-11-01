@@ -2,7 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { api, dateTime, useAdminData } from "./api";
-import { Badge, Button, Card, Cell, ErrorText, inputClass, Table } from "./ui";
+import {
+  Badge,
+  Button,
+  Card,
+  Cell,
+  ErrorText,
+  inputClass,
+  PageHeader,
+  Row,
+  Table,
+} from "./ui";
 
 interface Feedback {
   id: string;
@@ -16,11 +26,11 @@ interface Feedback {
 
 const STATUS: Record<
   Feedback["status"],
-  { label: string; tone: "accent" | "warm" | "muted" }
+  { label: string; tone: "accent" | "warm" | "slate" }
 > = {
   new: { label: "Nouveau", tone: "accent" },
   in_progress: { label: "En cours", tone: "warm" },
-  done: { label: "Traité", tone: "muted" },
+  done: { label: "Traité", tone: "slate" },
 };
 
 /** Retours des testeurs, avec leur statut. */
@@ -36,47 +46,53 @@ export function FeedbackSection({ onSignedOut }: { onSignedOut: () => void }) {
   };
 
   return (
-    <Card title="Retours des testeurs">
-      <ErrorText>{error}</ErrorText>
-      {data?.feedback.length === 0 && (
-        <p className="text-sm text-muted">Aucun retour pour l'instant.</p>
-      )}
-      <ul className="flex flex-col gap-3">
-        {data?.feedback.map((item) => (
-          <li key={item.id} className="rounded-md border border-border p-3">
-            <div className="mb-1 flex flex-wrap items-center gap-2 text-sm">
-              <Badge tone={STATUS[item.status].tone}>
-                {STATUS[item.status].label}
-              </Badge>
-              <span className="font-medium">
-                {item.userName ?? "Ancien membre"}
-              </span>
-              {item.userEmail && (
-                <span className="font-mono text-muted">{item.userEmail}</span>
-              )}
-              <span className="text-muted">
-                {dateTime(item.createdAt)}
-                {item.extensionVersion &&
-                  ` · extension ${item.extensionVersion}`}
-              </span>
-            </div>
-            <p className="whitespace-pre-wrap text-sm">{item.text}</p>
-            <div className="mt-2 flex gap-2">
-              {(["new", "in_progress", "done"] as const)
-                .filter((status) => status !== item.status)
-                .map((status) => (
-                  <Button
-                    key={status}
-                    onClick={() => void setStatus(item, status)}
-                  >
-                    {STATUS[status].label}
-                  </Button>
-                ))}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Card>
+    <>
+      <PageHeader
+        title="Retours des testeurs"
+        subtitle="Envoyés depuis l'extension, avec leur statut"
+      />
+      <Card title="Retours des testeurs">
+        <ErrorText>{error}</ErrorText>
+        {data?.feedback.length === 0 && (
+          <p className="text-sm text-muted">Aucun retour pour l'instant.</p>
+        )}
+        <ul className="flex flex-col gap-3">
+          {data?.feedback.map((item) => (
+            <li key={item.id} className="rounded-md border border-border p-3">
+              <div className="mb-1 flex flex-wrap items-center gap-2 text-sm">
+                <Badge tone={STATUS[item.status].tone}>
+                  {STATUS[item.status].label}
+                </Badge>
+                <span className="font-medium">
+                  {item.userName ?? "Ancien membre"}
+                </span>
+                {item.userEmail && (
+                  <span className="font-mono text-muted">{item.userEmail}</span>
+                )}
+                <span className="text-muted">
+                  {dateTime(item.createdAt)}
+                  {item.extensionVersion &&
+                    ` · extension ${item.extensionVersion}`}
+                </span>
+              </div>
+              <p className="whitespace-pre-wrap text-sm">{item.text}</p>
+              <div className="mt-2 flex gap-2">
+                {(["new", "in_progress", "done"] as const)
+                  .filter((status) => status !== item.status)
+                  .map((status) => (
+                    <Button
+                      key={status}
+                      onClick={() => void setStatus(item, status)}
+                    >
+                      {STATUS[status].label}
+                    </Button>
+                  ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </>
   );
 }
 
@@ -96,7 +112,11 @@ interface Rate {
 /** Réglages : formules et quotas, barème des crédits. */
 export function SettingsSection({ onSignedOut }: { onSignedOut: () => void }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Réglages"
+        subtitle="Formules, quotas et barème des crédits"
+      />
       <PlansCard onSignedOut={onSignedOut} />
       <RatesCard onSignedOut={onSignedOut} />
     </div>
@@ -149,7 +169,7 @@ function PlansCard({ onSignedOut }: { onSignedOut: () => void }) {
         ]}
       >
         {Object.values(drafts).map((plan) => (
-          <tr key={plan.id}>
+          <Row key={plan.id}>
             <Cell>
               <input
                 className={inputClass}
@@ -178,7 +198,7 @@ function PlansCard({ onSignedOut }: { onSignedOut: () => void }) {
                 {saved === plan.id ? "Enregistré" : "Enregistrer"}
               </Button>
             </Cell>
-          </tr>
+          </Row>
         ))}
       </Table>
     </Card>

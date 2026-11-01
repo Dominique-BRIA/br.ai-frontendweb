@@ -2,7 +2,15 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import { api, dateTime, useAdminData } from "./api";
-import { Badge, Button, Card, ErrorText, Field, inputClass } from "./ui";
+import {
+  Badge,
+  Button,
+  Card,
+  ErrorText,
+  Field,
+  inputClass,
+  PageHeader,
+} from "./ui";
 
 interface Maintenance {
   startsAt: string;
@@ -96,7 +104,11 @@ export function MaintenanceSection({
 
   const status = data?.status;
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Maintenance"
+        subtitle="Annoncée dans l'extension et sur le site ; les comptes en exception gardent l'accès"
+      />
       <Card title="État">
         <ErrorText>{error}</ErrorText>
         {status && (

@@ -10,6 +10,8 @@ import {
   ErrorText,
   Field,
   inputClass,
+  PageHeader,
+  Row,
   Table,
 } from "./ui";
 
@@ -86,8 +88,15 @@ export function PromoSection({ onSignedOut }: { onSignedOut: () => void }) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card title="Nouveau code">
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Codes promo"
+        subtitle="Formules offertes, essais, crédits en bonus et réductions"
+      />
+      <Card
+        title="Nouveau code"
+        description="Un code choisi, ou un lot de codes uniques générés"
+      >
         <PromoForm
           plans={plans.data?.plans ?? []}
           onCreated={async (codes) => {
@@ -123,7 +132,7 @@ export function PromoSection({ onSignedOut }: { onSignedOut: () => void }) {
           ]}
         >
           {data?.codes.map((code) => (
-            <tr key={code.id} className={code.disabled ? "opacity-50" : ""}>
+            <Row key={code.id} muted={code.disabled}>
               <Cell mono>{code.code}</Cell>
               <Cell>{KINDS[code.kind] ?? code.kind}</Cell>
               <Cell>{effect(code)}</Cell>
@@ -144,13 +153,13 @@ export function PromoSection({ onSignedOut }: { onSignedOut: () => void }) {
               </Cell>
               <Cell>
                 <Button
-                  kind={code.disabled ? "secondary" : "danger"}
+                  kind={code.disabled ? "outline" : "danger"}
                   onClick={() => void toggle(code)}
                 >
                   {code.disabled ? "Réactiver" : "Désactiver"}
                 </Button>
               </Cell>
-            </tr>
+            </Row>
           ))}
         </Table>
       </Card>
