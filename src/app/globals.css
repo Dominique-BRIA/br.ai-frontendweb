@@ -2,39 +2,53 @@
 
 /*
  * Fondations de la charte des interfaces (backend/docs/charte-interfaces.md, 1.2).
- * Le bleu du logo comme couleur de marque, l’orange pour l’attente et les alertes,
- * des gris neutres, de petits arrondis.
+ * Les couleurs viennent du logo « Retour à la ligne » : en mode clair, le bleu très pâle de
+ * son fond et le bleu nuit de son texte ; en mode sombre, le bleu nuit de son fond et le
+ * blanc bleuté de son texte. Le bleu sert aux actions, l'orange à l'attente et aux alertes.
+ *
+ * Le mode suit la classe « dark » posée sur <html> (choix du visiteur, ou réglage du système).
  */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: oklch(99% 0.002 60);
-  --foreground: oklch(22% 0.01 60);
-  --muted: oklch(48% 0.01 60);
-  --border: oklch(90% 0.005 60);
+  color-scheme: light;
+  --background: #eef4fb;
+  --background-deep: #dfebf7;
+  --card: #ffffff;
+  --foreground: #0c3254;
+  --muted: #4d6e8f;
+  --border: #d3e2f1;
   --accent: #1860a0;
+  --accent-soft: #1860a01a;
+  --primary: #1860a0;
   --warm: #de791a;
-  --danger: oklch(55% 0.19 25);
-  --card: oklch(100% 0 0);
+  --danger: #c2372e;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(17% 0.005 60);
-    --foreground: oklch(94% 0.005 60);
-    --muted: oklch(70% 0.01 60);
-    --border: oklch(30% 0.008 60);
-    --accent: #5896d8;
-    --warm: #faa03a;
-    --danger: oklch(68% 0.17 25);
-    --card: oklch(21% 0.006 240);
-  }
+.dark {
+  color-scheme: dark;
+  --background: #0b2340;
+  --background-deep: #081e38;
+  --card: #113154;
+  --foreground: #f3f8ff;
+  --muted: #a8c6e4;
+  --border: #21497a;
+  --accent: #6aa5e2;
+  --accent-soft: #6aa5e226;
+  --primary: #2a72bc;
+  --warm: #faa03a;
+  --danger: #f2837a;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-deep: var(--background-deep);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-primary: var(--primary);
   --color-warm: var(--warm);
   --color-danger: var(--danger);
   --color-card: var(--card);
@@ -45,6 +59,12 @@
 }
 
 body {
-  background: var(--background);
+  /* Le léger dégradé reprend celui du fond du logo. */
+  background: linear-gradient(
+      180deg,
+      var(--background) 0%,
+      var(--background-deep) 100%
+    )
+    fixed;
   color: var(--foreground);
 }

@@ -156,10 +156,7 @@ export function OverviewSection({
                 {(["serveur", "cuisinier"] as const).map((agent) => (
                   <div key={agent}>
                     <p className="mb-2 flex items-center gap-2 text-sm font-medium">
-                      <Bot
-                        className="h-4 w-4 text-zinc-400"
-                        aria-hidden="true"
-                      />
+                      <Bot className="h-4 w-4 text-muted" aria-hidden="true" />
                       {agent === "serveur" ? "Agent serveur" : "Cuisinier"}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
@@ -168,11 +165,7 @@ export function OverviewSection({
                       )}
                       {data.chains[agent].map((model, index) => (
                         <span key={model} className="flex items-center gap-2">
-                          {index > 0 && (
-                            <span className="text-zinc-300 dark:text-zinc-600">
-                              →
-                            </span>
-                          )}
+                          {index > 0 && <span className="text-muted">→</span>}
                           <Badge tone={index === 0 ? "accent" : "slate"}>
                             {model}
                           </Badge>
@@ -181,7 +174,7 @@ export function OverviewSection({
                     </div>
                   </div>
                 ))}
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-sm text-muted">
                   Refus des offres gratuites sur 24 h :{" "}
                   {data.providerErrors24h.length === 0
                     ? "aucun"
@@ -199,21 +192,21 @@ export function OverviewSection({
               description="Aucune machine de l'équipe n'est disponible"
             >
               {pending.data?.orders.length ? (
-                <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <ul className="divide-y divide-border">
                   {pending.data.orders.map((order) => (
                     <li
                       key={order.id}
                       className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
                     >
                       <FolderKanban
-                        className="mt-0.5 h-4 w-4 shrink-0 text-[#de791a]"
+                        className="mt-0.5 h-4 w-4 shrink-0 text-warm"
                         aria-hidden="true"
                       />
                       <div className="min-w-0 text-sm">
                         <p className="font-medium">
                           n° {order.number} · {order.title}
                         </p>
-                        <p className="text-zinc-500 dark:text-zinc-400">
+                        <p className="text-muted">
                           {order.team} · {order.project} · depuis le{" "}
                           {dateTime(order.createdAt)}
                         </p>
@@ -222,9 +215,7 @@ export function OverviewSection({
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Aucune commande n'attend.
-                </p>
+                <p className="text-sm text-muted">Aucune commande n'attend.</p>
               )}
             </Card>
           </div>
@@ -295,7 +286,7 @@ export function UsersSection({ onSignedOut }: { onSignedOut: () => void }) {
             }}
           >
             <Search
-              className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-zinc-400"
+              className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-muted"
               aria-hidden="true"
             />
             <input
@@ -329,7 +320,7 @@ export function UsersSection({ onSignedOut }: { onSignedOut: () => void }) {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium">{user.displayName}</p>
-                    <p className="truncate font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="truncate font-mono text-xs text-muted">
                       {user.email}
                     </p>
                   </div>
@@ -422,7 +413,7 @@ export function TeamsSection({ onSignedOut }: { onSignedOut: () => void }) {
                     {team.effectivePlan}
                   </Badge>
                   {team.planEndsAt && (
-                    <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="ml-2 text-xs text-muted">
                       jusqu'au {date(team.planEndsAt)}
                     </span>
                   )}
@@ -612,9 +603,7 @@ export function CostsSection({ onSignedOut }: { onSignedOut: () => void }) {
                 <Row key={`${row.provider}:${row.model}`}>
                   <Cell>
                     <p className="font-medium">{row.model}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {row.provider}
-                    </p>
+                    <p className="text-xs text-muted">{row.provider}</p>
                   </Cell>
                   <Cell>{number(row.calls)}</Cell>
                   <Cell>
@@ -639,7 +628,7 @@ export function CostsSection({ onSignedOut }: { onSignedOut: () => void }) {
                       <span className="font-medium">
                         {PURPOSES[row.purpose] ?? row.purpose}
                       </span>
-                      <span className="tabular-nums text-zinc-500 dark:text-zinc-400">
+                      <span className="tabular-nums text-muted">
                         {number(row.credits)} crédits · {number(row.calls)}{" "}
                         appels
                       </span>
@@ -663,7 +652,7 @@ export function CostsSection({ onSignedOut }: { onSignedOut: () => void }) {
                           <Badge tone="warm">à surveiller</Badge>
                         )}
                       </span>
-                      <span className="tabular-nums text-zinc-500 dark:text-zinc-400">
+                      <span className="tabular-nums text-muted">
                         {number(row.credits)} crédits
                       </span>
                     </div>

@@ -15,7 +15,8 @@ import {
   Wrench,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
-import { Logo } from "../Logo";
+import { Emblem, Logo } from "../Logo";
+import { ThemeToggle } from "../ThemeToggle";
 import { api, SignedOut } from "./api";
 import { MaintenanceSection } from "./maintenance";
 import { PromoSection } from "./promo";
@@ -70,7 +71,7 @@ export function Dashboard() {
   }, []);
 
   if (state === "checking")
-    return <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950" />;
+    return <div className="min-h-screen bg-background" />;
   if (state === "signedOut")
     return <SignIn onSignedIn={() => setState("signedIn")} />;
 
@@ -80,29 +81,20 @@ export function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <aside
-        className={`flex shrink-0 flex-col border-r border-zinc-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-900 ${
+        className={`flex shrink-0 flex-col border-r border-border bg-card transition-all duration-300 ${
           collapsed ? "w-16" : "w-64"
         }`}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-zinc-200 px-4 dark:border-zinc-800">
-          {/* biome-ignore lint/performance/noImgElement: petite image fixe, inutile de passer par l'optimiseur. */}
-          <img
-            src="/logo-symbole.png"
-            alt=""
-            width={36}
-            height={36}
-            className="shrink-0 rounded-lg shadow-sm"
-          />
+        <div className="flex h-16 items-center gap-3 border-b border-border px-4">
+          <Emblem className="h-12 w-12 shrink-0" />
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate font-mono text-base font-bold">
                 {"<br/>"}
               </p>
-              <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                Administration
-              </p>
+              <p className="truncate text-xs text-muted">Administration</p>
             </div>
           )}
         </div>
@@ -122,8 +114,8 @@ export function Dashboard() {
                 title={collapsed ? item.label : undefined}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-[#1860a0]/10 text-[#1860a0] dark:bg-[#5896d8]/15 dark:text-[#8cbbec]"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    ? "bg-accent-soft text-accent"
+                    : "text-muted hover:bg-accent-soft"
                 }`}
               >
                 <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -135,7 +127,7 @@ export function Dashboard() {
           })}
         </nav>
 
-        <div className="border-t border-zinc-200 p-2 dark:border-zinc-800">
+        <div className="border-t border-border p-2">
           <button
             type="button"
             onClick={async () => {
@@ -143,7 +135,7 @@ export function Dashboard() {
               setState("signedOut");
             }}
             title={collapsed ? "Déconnexion" : undefined}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10"
           >
             <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
             {!collapsed && <span>Déconnexion</span>}
@@ -152,12 +144,12 @@ export function Dashboard() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? "Déplier le menu" : "Replier le menu"}
-            className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            className="rounded-lg p-2 text-muted hover:bg-accent-soft"
           >
             {collapsed ? (
               <Menu className="h-5 w-5" />
@@ -166,7 +158,8 @@ export function Dashboard() {
             )}
           </button>
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-zinc-500 sm:inline dark:text-zinc-400">
+            <ThemeToggle />
+            <span className="hidden text-sm text-muted sm:inline">
               Équipe interne
             </span>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#1860a0] to-[#0e385e] text-white">
@@ -227,13 +220,14 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
-      <main className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-200/70 dark:bg-zinc-900 dark:ring-zinc-800">
-        <Logo className="mx-auto mb-6 h-auto w-36" />
+    <div className="relative flex min-h-screen items-center justify-center px-4">
+      <ThemeToggle className="absolute top-4 right-4" />
+      <main className="w-full max-w-sm rounded-2xl bg-card p-8 shadow-sm ring-1 ring-border">
+        <Logo className="mx-auto mb-6 h-auto w-60" />
         <h1 className="text-center text-xl font-bold tracking-tight">
           Administration
         </h1>
-        <p className="mt-1 mb-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 mb-6 text-center text-sm text-muted">
           Réservé à l'équipe interne. Saisissez le jeton d'administration du
           serveur.
         </p>

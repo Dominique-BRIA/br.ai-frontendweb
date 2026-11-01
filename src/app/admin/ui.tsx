@@ -25,11 +25,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        {subtitle && (
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {subtitle}
-          </p>
-        )}
+        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}
     </div>
@@ -52,18 +48,16 @@ export function Card({
   return (
     <section
       className={cx(
-        "rounded-xl bg-white shadow-sm ring-1 ring-zinc-200/70 dark:bg-zinc-900 dark:ring-zinc-800",
+        "rounded-xl bg-card shadow-sm ring-1 ring-border",
         className,
       )}
     >
       {(title || actions) && (
-        <div className="flex flex-col justify-between gap-3 border-b border-zinc-100 px-5 py-4 sm:flex-row sm:items-center dark:border-zinc-800">
+        <div className="flex flex-col justify-between gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center">
           <div>
             {title && <h2 className="text-base font-semibold">{title}</h2>}
             {description && (
-              <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                {description}
-              </p>
+              <p className="mt-0.5 text-sm text-muted">{description}</p>
             )}
           </div>
           {actions}
@@ -75,15 +69,9 @@ export function Card({
 }
 
 const TONES = {
-  accent: {
-    icon: "text-[#1860a0] dark:text-[#5896d8]",
-    bg: "bg-[#1860a0]/10 dark:bg-[#5896d8]/15",
-  },
-  warm: {
-    icon: "text-[#de791a] dark:text-[#faa03a]",
-    bg: "bg-[#f29430]/12 dark:bg-[#faa03a]/15",
-  },
-  danger: { icon: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+  accent: { icon: "text-accent", bg: "bg-accent-soft" },
+  warm: { icon: "text-warm", bg: "bg-warm/15" },
+  danger: { icon: "text-danger", bg: "bg-danger/10" },
   success: {
     icon: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-500/10",
@@ -92,7 +80,7 @@ const TONES = {
     icon: "text-violet-600 dark:text-violet-400",
     bg: "bg-violet-500/10",
   },
-  slate: { icon: "text-zinc-600 dark:text-zinc-300", bg: "bg-zinc-500/10" },
+  slate: { icon: "text-muted", bg: "bg-muted/10" },
 } as const;
 export type Tone = keyof typeof TONES;
 
@@ -115,15 +103,11 @@ export function StatCard({
   const body = (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0 space-y-1">
-        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          {label}
-        </p>
+        <p className="text-sm font-medium text-muted">{label}</p>
         <p className="text-3xl font-bold tabular-nums tracking-tight">
           {value}
         </p>
-        {hint && (
-          <p className="text-xs text-zinc-400 dark:text-zinc-500">{hint}</p>
-        )}
+        {hint && <p className="text-xs text-muted">{hint}</p>}
       </div>
       <div
         className={cx(
@@ -136,7 +120,7 @@ export function StatCard({
     </div>
   );
   const classes =
-    "rounded-xl bg-white p-5 text-left shadow-sm ring-1 ring-zinc-200/70 dark:bg-zinc-900 dark:ring-zinc-800";
+    "rounded-xl bg-card p-5 text-left shadow-sm ring-1 ring-border";
   return onClick ? (
     <button
       type="button"
@@ -164,21 +148,19 @@ export function Table({
     <div className="-mx-5 -my-5 overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-zinc-50 dark:bg-zinc-800/50">
+          <tr className="bg-background">
             {head.map((label, index) => (
               <th
                 // biome-ignore lint/suspicious/noArrayIndexKey: les en-têtes sont fixes et peuvent être vides.
                 key={index}
-                className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted"
               >
                 {label}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-          {children}
-        </tbody>
+        <tbody className="divide-y divide-border">{children}</tbody>
       </table>
     </div>
   );
@@ -194,7 +176,7 @@ export function Row({
   return (
     <tr
       className={cx(
-        "transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40",
+        "transition-colors hover:bg-accent-soft",
         muted && "opacity-50",
       )}
     >
@@ -243,13 +225,10 @@ export function Button({
   title?: string;
 }) {
   const styles = {
-    primary: "bg-[#1860a0] text-white shadow-sm hover:bg-[#14528a]",
-    outline:
-      "border border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800",
-    ghost:
-      "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800",
-    danger:
-      "border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/50",
+    primary: "bg-primary text-white shadow-sm hover:brightness-110",
+    outline: "border border-border bg-card hover:bg-accent-soft",
+    ghost: "text-muted hover:bg-accent-soft",
+    danger: "border border-danger/40 text-danger hover:bg-danger/10",
   };
   return (
     <button
@@ -279,21 +258,17 @@ export function Field({
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: le champ est passé en enfant et se trouve donc dans le libellé.
     <label className="flex flex-col gap-1.5 text-sm">
-      <span className="font-medium text-zinc-700 dark:text-zinc-300">
-        {label}
-      </span>
+      <span className="font-medium text-muted">{label}</span>
       {children}
     </label>
   );
 }
 
 export const inputClass =
-  "h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm outline-none transition-shadow focus:border-[#1860a0] focus:ring-2 focus:ring-[#1860a0]/20 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 [textarea&]:h-auto [textarea&]:py-2";
+  "h-9 rounded-lg border border-border bg-card px-3 text-sm outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-50 [textarea&]:h-auto [textarea&]:py-2";
 
 export function ErrorText({ children }: { children: ReactNode }) {
-  return children ? (
-    <p className="text-sm text-red-600 dark:text-red-400">{children}</p>
-  ) : null;
+  return children ? <p className="text-sm text-danger">{children}</p> : null;
 }
 
 export function Badge({
@@ -324,13 +299,9 @@ export function Meter({
   ratio: number;
   tone?: Tone;
 }) {
-  const color = {
-    accent: "bg-[#1860a0] dark:bg-[#5896d8]",
-    warm: "bg-[#f29430]",
-    danger: "bg-red-500",
-  };
+  const color = { accent: "bg-accent", warm: "bg-warm", danger: "bg-danger" };
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-border/60">
       <div
         className={cx(
           "h-full rounded-full",
@@ -348,7 +319,7 @@ export function Loading() {
       {[0, 1, 2, 3].map((index) => (
         <div
           key={index}
-          className="h-28 animate-pulse rounded-xl bg-zinc-200/60 dark:bg-zinc-800/60"
+          className="h-28 animate-pulse rounded-xl bg-border/50"
         />
       ))}
     </div>
