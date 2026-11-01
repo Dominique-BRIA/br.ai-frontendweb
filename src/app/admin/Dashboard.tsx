@@ -35,7 +35,13 @@ import {
   UsersSection,
 } from "./sections";
 import { FeedbackSection, SettingsSection } from "./settings";
-import { ErrorText, Field, inputClass, ReadOnlyContext } from "./ui";
+import {
+  ErrorText,
+  Field,
+  inputClass,
+  PasswordInput,
+  ReadOnlyContext,
+} from "./ui";
 
 const SECTIONS = [
   { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
@@ -349,13 +355,11 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
             />
           </Field>
           <Field label="Mot de passe">
-            <input
-              type="password"
-              required
+            <PasswordInput
               autoComplete="current-password"
-              className={`${inputClass} h-11`}
+              className="h-11"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={setPassword}
             />
           </Field>
           <ErrorText>{error}</ErrorText>

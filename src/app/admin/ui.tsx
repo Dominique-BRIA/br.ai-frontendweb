@@ -1,7 +1,7 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import { createContext, type ReactNode, useContext } from "react";
+import { Eye, EyeOff, type LucideIcon } from "lucide-react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 
 /**
  * Éléments du tableau de bord : fond gris clair, cartes blanches arrondies avec une ombre
@@ -292,6 +292,53 @@ export function Field({
 
 export const inputClass =
   "h-9 rounded-lg border border-border bg-field px-3 text-sm outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-50 [textarea&]:h-auto [textarea&]:py-2";
+
+/** Champ de mot de passe, avec un œil pour afficher ou masquer ce qui est saisi. */
+export function PasswordInput({
+  value,
+  onChange,
+  autoComplete,
+  className = "",
+  minLength,
+  required = true,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete: "current-password" | "new-password";
+  className?: string;
+  minLength?: number;
+  required?: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  const label = visible
+    ? "Masquer le mot de passe"
+    : "Afficher le mot de passe";
+  const Icon = visible ? EyeOff : Eye;
+  return (
+    <span className="relative flex">
+      <input
+        type={visible ? "text" : "password"}
+        required={required}
+        minLength={minLength}
+        autoComplete={autoComplete}
+        spellCheck={false}
+        className={`${inputClass} w-full pr-10 ${className}`}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible(!visible)}
+        title={label}
+        aria-label={label}
+        aria-pressed={visible}
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-muted transition-colors hover:text-foreground"
+      >
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </span>
+  );
+}
 
 export function ErrorText({ children }: { children: ReactNode }) {
   return children ? <p className="text-sm text-danger">{children}</p> : null;

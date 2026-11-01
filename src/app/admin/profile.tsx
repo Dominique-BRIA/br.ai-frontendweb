@@ -4,7 +4,15 @@ import { KeyRound, Save } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { AccessBadges } from "./access";
 import { initials, type Me } from "./permissions";
-import { Button, Card, ErrorText, Field, inputClass, PageHeader } from "./ui";
+import {
+  Button,
+  Card,
+  ErrorText,
+  Field,
+  inputClass,
+  PageHeader,
+  PasswordInput,
+} from "./ui";
 
 /** Le profil du compte connecté : ses informations, son mot de passe et ses accès. */
 export function ProfileSection({
@@ -103,13 +111,10 @@ function Information({
         </Field>
         {emailChanged && (
           <Field label="Mot de passe actuel, pour confirmer la nouvelle adresse">
-            <input
-              required
-              type="password"
+            <PasswordInput
               autoComplete="current-password"
-              className={inputClass}
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={setPassword}
             />
           </Field>
         )}
@@ -168,35 +173,26 @@ function ChangePassword() {
     >
       <form className="flex flex-col gap-4" onSubmit={submit}>
         <Field label="Mot de passe actuel">
-          <input
-            required
-            type="password"
+          <PasswordInput
             autoComplete="current-password"
-            className={inputClass}
             value={current}
-            onChange={(event) => setCurrent(event.target.value)}
+            onChange={setCurrent}
           />
         </Field>
         <Field label="Nouveau mot de passe (12 caractères au moins)">
-          <input
-            required
+          <PasswordInput
             minLength={12}
-            type="password"
             autoComplete="new-password"
-            className={inputClass}
             value={next}
-            onChange={(event) => setNext(event.target.value)}
+            onChange={setNext}
           />
         </Field>
         <Field label="Nouveau mot de passe, à nouveau">
-          <input
-            required
+          <PasswordInput
             minLength={12}
-            type="password"
             autoComplete="new-password"
-            className={inputClass}
             value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
+            onChange={setConfirm}
           />
         </Field>
         <ErrorText>{error}</ErrorText>
