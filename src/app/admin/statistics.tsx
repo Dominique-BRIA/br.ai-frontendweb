@@ -3,6 +3,7 @@
 import {
   Bot,
   Coins,
+  FileDown,
   MessagesSquare,
   RefreshCw,
   UserPlus,
@@ -41,7 +42,7 @@ interface Totals {
   credits: number;
 }
 
-interface Statistics {
+export interface Statistics {
   days: number;
   timeZone: string;
   current: Totals;
@@ -116,6 +117,26 @@ export function StatisticsSection({
   );
   // Pendant le rechargement d'une autre période, l'ancien rendu reste, atténué.
   const stale = data !== null && data.days !== days;
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  // Le module du PDF, assez lourd, n'est chargé qu'à la première demande de rapport.
+  const exportPdf = async () => {
+    if (!data) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const me = await fetch("/api/admin/session")
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null);
+      const { downloadReport } = await import("./report");
+      await downloadReport(data, me?.admin?.name ?? "l'équipe interne");
+    } catch {
+      setExportError("Le rapport n'a pas pu être généré. Réessayez.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const orderParts = data
     ? [
@@ -171,10 +192,19 @@ export function StatisticsSection({
               title="Actualiser"
               onClick={() => void reload()}
             />
+            <Button
+              safe
+              kind="primary"
+              icon={FileDown}
+              disabled={!data || stale || exporting}
+              onClick={() => void exportPdf()}
+            >
+              {exporting ? "Génération…" : "Rapport PDF"}
+            </Button>
           </>
         }
       />
-      <ErrorText>{error}</ErrorText>
+      <ErrorText>{error ?? exportError}</ErrorText>
 
       {data && (
         <div
