@@ -12,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   TicketPercent,
+  UserCog,
   Users,
   UsersRound,
   Wrench,
@@ -19,6 +20,7 @@ import {
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Emblem } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
+import { AdminsSection } from "./admins";
 import { api, SignedOut } from "./api";
 import { BetaRequestsSection } from "./beta";
 import { MaintenanceSection } from "./maintenance";
@@ -41,6 +43,7 @@ const SECTIONS = [
   { id: "demandes", label: "Demandes de bêta", icon: Inbox },
   { id: "retours", label: "Retours", icon: MessageSquareText },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
+  { id: "comptes", label: "Équipe interne", icon: UserCog },
   { id: "reglages", label: "Réglages", icon: Settings },
 ] as const;
 
@@ -204,6 +207,7 @@ export function Dashboard() {
             {section === "maintenance" && (
               <MaintenanceSection onSignedOut={signedOut} />
             )}
+            {section === "comptes" && <AdminsSection onSignedOut={signedOut} />}
             {section === "reglages" && (
               <SettingsSection onSignedOut={signedOut} />
             )}
