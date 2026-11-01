@@ -1,6 +1,6 @@
 "use client";
 
-import { Send } from "lucide-react";
+import { RotateCw, Send } from "lucide-react";
 import { useState } from "react";
 import { api, dateTime, useAdminData } from "./api";
 import {
@@ -19,6 +19,7 @@ interface BetaRequest {
   email: string;
   inviteCode: string | null;
   invitedAt: string | null;
+  joined: boolean;
   createdAt: string;
 }
 
@@ -35,11 +36,12 @@ export function BetaRequestsSection({
   const [sending, setSending] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
 
-  const invite = async (request: BetaRequest) => {
+  const send = async (request: BetaRequest) => {
     setSending(request.id);
     setSendError(null);
+    const action = request.inviteCode ? "resend" : "invite";
     try {
-      await api(`beta-requests/${request.id}/invite`, { method: "POST" });
+      await api(`beta-requests/${request.id}/${action}`, { method: "POST" });
       await reload();
     } catch (cause) {
       setSendError((cause as Error).message);
@@ -74,7 +76,9 @@ export function BetaRequestsSection({
                 </Cell>
                 <Cell>{dateTime(request.createdAt)}</Cell>
                 <Cell>
-                  {request.inviteCode ? (
+                  {request.joined ? (
+                    <Badge tone="accent">Compte créé</Badge>
+                  ) : request.inviteCode ? (
                     <Badge tone="success">
                       Invitée le {dateTime(request.invitedAt)}
                     </Badge>
@@ -83,20 +87,27 @@ export function BetaRequestsSection({
                   )}
                 </Cell>
                 <Cell>
-                  {request.inviteCode ? (
-                    <span className="font-mono text-xs text-muted">
-                      {request.inviteCode}
-                    </span>
-                  ) : (
-                    <Button
-                      kind="primary"
-                      icon={Send}
-                      disabled={sending !== null}
-                      onClick={() => void invite(request)}
-                    >
-                      {sending === request.id ? "Envoi…" : "Inviter"}
-                    </Button>
-                  )}
+                  <div className="flex items-center justify-end gap-3">
+                    {request.inviteCode && (
+                      <span className="font-mono text-xs text-muted">
+                        {request.inviteCode}
+                      </span>
+                    )}
+                    {!request.joined && (
+                      <Button
+                        kind={request.inviteCode ? "outline" : "primary"}
+                        icon={request.inviteCode ? RotateCw : Send}
+                        disabled={sending !== null}
+                        onClick={() => void send(request)}
+                      >
+                        {sending === request.id
+                          ? "Envoi…"
+                          : request.inviteCode
+                            ? "Renvoyer"
+                            : "Inviter"}
+                      </Button>
+                    )}
+                  </div>
                 </Cell>
               </Row>
             ))}

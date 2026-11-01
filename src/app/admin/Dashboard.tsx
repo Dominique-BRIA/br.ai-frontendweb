@@ -269,6 +269,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           <Field label="Adresse e-mail">
             <input
               type="email"
+              required
               autoComplete="username"
               className={`${inputClass} h-11`}
               placeholder="nom@exemple.org"
@@ -279,6 +280,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           <Field label="Mot de passe">
             <input
               type="password"
+              required
               autoComplete="current-password"
               className={`${inputClass} h-11`}
               value={password}
@@ -288,7 +290,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           <ErrorText>{error}</ErrorText>
           <button
             type="submit"
-            disabled={busy || !email.trim() || !password}
+            disabled={busy}
             className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-50"
           >
             Se connecter

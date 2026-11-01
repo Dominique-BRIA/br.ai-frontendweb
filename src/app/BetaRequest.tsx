@@ -57,7 +57,7 @@ export function BetaRequest() {
           />
           <button
             type="submit"
-            disabled={busy || !email.trim()}
+            disabled={busy}
             className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-foreground font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
           >
             {busy ? "Envoi…" : "Demander une invitation"}
