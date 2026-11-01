@@ -1,6 +1,6 @@
-# br.ia — site web
+# \<br\>.ia — site web
 
-Le site de présentation de br.ia et, plus tard, le tableau de bord d'administration. Next.js 16, Tailwind CSS 4.
+Le site de présentation de \<br\>.ia et, plus tard, le tableau de bord d'administration. Next.js 16, Tailwind CSS 4.
 
 Les interfaces suivent la charte du dépôt backend : [`docs/charte-interfaces.md`](https://github.com/Dominique-BRIA/br.ai-backend/blob/main/docs/charte-interfaces.md).
 
