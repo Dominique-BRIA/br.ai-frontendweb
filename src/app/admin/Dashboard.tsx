@@ -238,20 +238,20 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center px-4 py-12">
+    <div className="relative flex min-h-screen flex-col items-center px-4 py-6">
       <div className="absolute top-6 right-6">
         <ThemeToggle withLabel />
       </div>
 
-      <Emblem className="mt-4 h-32 w-32 sm:h-36 sm:w-36" />
-      <h1 className="mt-6 text-center text-4xl font-bold tracking-tight sm:text-5xl">
+      <Emblem className="h-44 w-44 sm:h-52 sm:w-52" />
+      <h1 className="mt-2 text-center text-3xl font-bold tracking-tight sm:text-4xl">
         Retour à la ligne
       </h1>
-      <p className="mt-4 max-w-md text-center text-lg text-muted">
+      <p className="mt-2 max-w-md text-center text-base text-muted">
         Redonner un sens au travail d'équipe.
       </p>
 
-      <main className="mt-10 w-full max-w-md rounded-3xl bg-card p-8 shadow-lg shadow-accent/5 ring-1 ring-border sm:p-10">
+      <main className="mt-6 w-full max-w-md rounded-3xl bg-card p-8 shadow-lg shadow-accent/5 ring-1 ring-border sm:p-10">
         <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent ring-1 ring-accent/20">
           <ShieldCheck className="h-7 w-7" aria-hidden="true" />
         </div>
