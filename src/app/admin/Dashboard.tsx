@@ -43,18 +43,45 @@ import {
   ReadOnlyContext,
 } from "./ui";
 
-const SECTIONS = [
-  { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { id: "utilisateurs", label: "Utilisateurs", icon: Users },
-  { id: "equipes", label: "Équipes", icon: UsersRound },
-  { id: "couts", label: "Coûts d'IA", icon: BarChart3 },
-  { id: "codes", label: "Codes promo", icon: TicketPercent },
-  { id: "demandes", label: "Demandes de bêta", icon: Inbox },
-  { id: "retours", label: "Retours", icon: MessageSquareText },
-  { id: "maintenance", label: "Maintenance", icon: Wrench },
-  { id: "comptes", label: "Équipe interne", icon: UserCog },
-  { id: "reglages", label: "Réglages", icon: Settings },
+/** Les sections du menu, regroupées par thème. */
+const GROUPS = [
+  {
+    label: "Pilotage",
+    items: [
+      { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
+      { id: "couts", label: "Coûts d'IA", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Clients",
+    items: [
+      { id: "utilisateurs", label: "Utilisateurs", icon: Users },
+      { id: "equipes", label: "Équipes", icon: UsersRound },
+      { id: "retours", label: "Retours", icon: MessageSquareText },
+    ],
+  },
+  {
+    label: "Bêta et offres",
+    items: [
+      { id: "demandes", label: "Demandes de bêta", icon: Inbox },
+      { id: "codes", label: "Codes promo", icon: TicketPercent },
+    ],
+  },
+  {
+    label: "Plateforme",
+    items: [
+      { id: "maintenance", label: "Maintenance", icon: Wrench },
+      { id: "reglages", label: "Réglages", icon: Settings },
+      { id: "comptes", label: "Équipe interne", icon: UserCog },
+    ],
+  },
 ] as const;
+
+type Section = (typeof GROUPS)[number]["items"][number];
+
+const SECTIONS: readonly Section[] = GROUPS.flatMap(
+  (group): readonly Section[] => group.items,
+);
 
 /** Le profil n'est pas dans le menu : on l'ouvre en cliquant sur son nom, en bas. */
 type SectionId = (typeof SECTIONS)[number]["id"] | "profil";
@@ -127,7 +154,10 @@ export function Dashboard() {
   };
   // Une adresse vers une section interdite revient à la vue d'ensemble.
   const shown = me && !canOpen(me, section) ? "vue-d-ensemble" : section;
-  const visible = SECTIONS.filter((item) => !me || canOpen(me, item.id));
+  const groups = GROUPS.map((group) => ({
+    label: group.label,
+    items: group.items.filter((item) => !me || canOpen(me, item.id)),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -148,32 +178,45 @@ export function Dashboard() {
           )}
         </div>
 
-        <nav
-          className="flex-1 space-y-1 overflow-y-auto px-2 py-4"
-          aria-label="Sections"
-        >
-          {visible.map((item) => {
-            const active = shown === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => go(item.id)}
-                aria-current={active ? "page" : undefined}
-                title={collapsed ? item.label : undefined}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-accent-soft text-accent"
-                    : "text-muted hover:bg-accent-soft"
-                }`}
-              >
-                <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                {!collapsed && (
-                  <span className="flex-1 text-left">{item.label}</span>
-                )}
-              </button>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto px-2 py-4" aria-label="Sections">
+          {groups.map((group, index) => (
+            <div key={group.label} className={index > 0 ? "mt-5" : ""}>
+              {collapsed ? (
+                index > 0 && <hr className="mx-2 mb-3 border-border" />
+              ) : (
+                <p className="mb-1.5 px-3 text-xs font-semibold tracking-wide text-muted uppercase">
+                  {group.label}
+                </p>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const active = shown === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => go(item.id)}
+                      aria-current={active ? "page" : undefined}
+                      title={collapsed ? item.label : undefined}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                        active
+                          ? "bg-accent-soft text-accent"
+                          : "text-muted hover:bg-accent-soft"
+                      }`}
+                    >
+                      <item.icon
+                        className="h-5 w-5 shrink-0"
+                        aria-hidden="true"
+                      />
+                      {!collapsed && (
+                        <span className="flex-1 text-left">{item.label}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="flex flex-col gap-2 border-t border-border p-3">
