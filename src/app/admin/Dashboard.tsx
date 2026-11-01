@@ -2,6 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { api, SignedOut } from "./api";
+import { MaintenanceSection } from "./maintenance";
 import { PromoSection } from "./promo";
 import {
   CostsSection,
@@ -19,6 +20,7 @@ const SECTIONS = [
   { id: "costs", label: "Coûts d'IA" },
   { id: "promo", label: "Codes promo" },
   { id: "feedback", label: "Retours" },
+  { id: "maintenance", label: "Maintenance" },
   { id: "settings", label: "Réglages" },
 ] as const;
 
@@ -98,6 +100,9 @@ export function Dashboard() {
         {section === "costs" && <CostsSection onSignedOut={signedOut} />}
         {section === "promo" && <PromoSection onSignedOut={signedOut} />}
         {section === "feedback" && <FeedbackSection onSignedOut={signedOut} />}
+        {section === "maintenance" && (
+          <MaintenanceSection onSignedOut={signedOut} />
+        )}
         {section === "settings" && <SettingsSection onSignedOut={signedOut} />}
       </main>
     </div>
