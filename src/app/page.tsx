@@ -7,8 +7,8 @@ export default function Home() {
         écrit le code sur vos machines.
       </h1>
       <p className="text-lg text-muted">
-        {"<br>.ia"} est en cours de construction. Une bêta privée ouvrira bientôt, sur
-        invitation.
+        {"<br>.ia"} est en cours de construction. Une bêta privée ouvrira
+        bientôt, sur invitation.
       </p>
     </main>
   );
