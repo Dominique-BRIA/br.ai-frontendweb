@@ -265,7 +265,7 @@ export function Field({
 }
 
 export const inputClass =
-  "h-9 rounded-lg border border-border bg-card px-3 text-sm outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-50 [textarea&]:h-auto [textarea&]:py-2";
+  "h-9 rounded-lg border border-border bg-field px-3 text-sm outline-none transition-shadow focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-50 [textarea&]:h-auto [textarea&]:py-2";
 
 export function ErrorText({ children }: { children: ReactNode }) {
   return children ? <p className="text-sm text-danger">{children}</p> : null;

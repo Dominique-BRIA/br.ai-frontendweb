@@ -3,8 +3,8 @@
 /*
  * Fondations de la charte des interfaces (backend/docs/charte-interfaces.md, 1.2).
  * Les couleurs viennent du logo « Retour à la ligne » : en mode clair, le bleu très pâle de
- * son fond et le bleu nuit de son texte ; en mode sombre, le bleu nuit de son fond et le
- * blanc bleuté de son texte. Le bleu sert aux actions, l'orange à l'attente et aux alertes.
+ * son fond et le bleu nuit de son texte ; en mode sombre, un noir à peine teinté de bleu nuit
+ * et un texte blanc, le bleu restant réservé aux actions. Le bleu sert aux actions, l'orange à l'attente et aux alertes.
  *
  * Le mode suit la classe « dark » posée sur <html> (choix du visiteur, ou réglage du système).
  */
@@ -15,6 +15,7 @@
   --background: #eef4fb;
   --background-deep: #dfebf7;
   --card: #ffffff;
+  --field: #ffffff;
   --foreground: #0c3254;
   --muted: #4d6e8f;
   --border: #d3e2f1;
@@ -27,15 +28,16 @@
 
 .dark {
   color-scheme: dark;
-  --background: #0b2340;
-  --background-deep: #081e38;
-  --card: #113154;
-  --foreground: #f3f8ff;
-  --muted: #a8c6e4;
-  --border: #21497a;
+  --background: #070a10;
+  --background-deep: #020305;
+  --card: #0c111a;
+  --field: #05070b;
+  --foreground: #ffffff;
+  --muted: #9ba5b4;
+  --border: #1d2532;
   --accent: #6aa5e2;
-  --accent-soft: #6aa5e226;
-  --primary: #2a72bc;
+  --accent-soft: #ffffff0f;
+  --primary: #1860a0;
   --warm: #faa03a;
   --danger: #f2837a;
 }
@@ -52,6 +54,7 @@
   --color-warm: var(--warm);
   --color-danger: var(--danger);
   --color-card: var(--card);
+  --color-field: var(--field);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
   --radius-sm: 4px;
@@ -67,4 +70,12 @@ body {
     )
     fixed;
   color: var(--foreground);
+}
+
+/* En mode sombre, un halo bleu nuit descend du haut de la page et se fond dans le noir. */
+.dark body {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -10%, #0e385e66 0%, transparent 70%),
+    linear-gradient(180deg, var(--background) 0%, var(--background-deep) 100%);
+  background-attachment: fixed;
 }
