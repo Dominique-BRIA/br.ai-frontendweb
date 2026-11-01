@@ -9,6 +9,7 @@ import {
   Cell,
   ErrorText,
   inputClass,
+  Locked,
   PageHeader,
   Row,
   Table,
@@ -117,8 +118,10 @@ export function SettingsSection({ onSignedOut }: { onSignedOut: () => void }) {
         title="Réglages"
         subtitle="Formules, quotas et barème des crédits"
       />
-      <PlansCard onSignedOut={onSignedOut} />
-      <RatesCard onSignedOut={onSignedOut} />
+      <Locked>
+        <PlansCard onSignedOut={onSignedOut} />
+        <RatesCard onSignedOut={onSignedOut} />
+      </Locked>
     </div>
   );
 }

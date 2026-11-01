@@ -2,16 +2,9 @@
 
 import { KeyRound, Save } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { initials, type Me, PERMISSIONS } from "./permissions";
-import {
-  Badge,
-  Button,
-  Card,
-  ErrorText,
-  Field,
-  inputClass,
-  PageHeader,
-} from "./ui";
+import { AccessBadges } from "./access";
+import { initials, type Me } from "./permissions";
+import { Button, Card, ErrorText, Field, inputClass, PageHeader } from "./ui";
 
 /** Le profil du compte connecté : ses informations, son mot de passe et ses accès. */
 export function ProfileSection({
@@ -21,9 +14,6 @@ export function ProfileSection({
   me: Me;
   onSaved: () => Promise<void>;
 }) {
-  const full = PERMISSIONS.every((permission) =>
-    me.permissions.includes(permission.id),
-  );
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Mon profil" subtitle="Vos informations de connexion" />
@@ -44,20 +34,7 @@ export function ProfileSection({
         title="Mes accès"
         description="Seul un compte qui gère l'équipe interne peut les modifier."
       >
-        <div className="flex flex-wrap gap-2">
-          {full ? (
-            <Badge tone="accent">Tout le tableau de bord</Badge>
-          ) : (
-            <>
-              <Badge>Vue d'ensemble</Badge>
-              {PERMISSIONS.filter((permission) =>
-                me.permissions.includes(permission.id),
-              ).map((permission) => (
-                <Badge key={permission.id}>{permission.label}</Badge>
-              ))}
-            </>
-          )}
-        </div>
+        <AccessBadges grants={me.permissions} />
       </Card>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   Field,
   inputClass,
   PageHeader,
+  Writable,
 } from "./ui";
 
 interface Maintenance {
@@ -140,71 +141,73 @@ export function MaintenanceSection({
           </div>
         )}
       </Card>
-      <Card
-        title={
-          status?.state === "none"
-            ? "Programmer une maintenance"
-            : "Modifier la maintenance"
-        }
-      >
-        <form className="flex flex-col gap-3" onSubmit={submit}>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label="Début (heure locale)">
-              <input
-                type="datetime-local"
-                className={inputClass}
-                value={startsAt}
-                onChange={(event) => setStartsAt(event.target.value)}
-              />
-            </Field>
-            <Field label="Durée estimée (minutes)">
-              <input
-                className={inputClass}
-                inputMode="numeric"
-                value={duration}
-                onChange={(event) =>
-                  setDuration(event.target.value.replace(/\D/g, ""))
-                }
-              />
-            </Field>
-            <Field label="Message en français">
+      <Writable>
+        <Card
+          title={
+            status?.state === "none"
+              ? "Programmer une maintenance"
+              : "Modifier la maintenance"
+          }
+        >
+          <form className="flex flex-col gap-3" onSubmit={submit}>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Début (heure locale)">
+                <input
+                  type="datetime-local"
+                  className={inputClass}
+                  value={startsAt}
+                  onChange={(event) => setStartsAt(event.target.value)}
+                />
+              </Field>
+              <Field label="Durée estimée (minutes)">
+                <input
+                  className={inputClass}
+                  inputMode="numeric"
+                  value={duration}
+                  onChange={(event) =>
+                    setDuration(event.target.value.replace(/\D/g, ""))
+                  }
+                />
+              </Field>
+              <Field label="Message en français">
+                <textarea
+                  className={inputClass}
+                  rows={2}
+                  value={messageFr}
+                  onChange={(event) => setMessageFr(event.target.value)}
+                />
+              </Field>
+              <Field label="Message en anglais">
+                <textarea
+                  className={inputClass}
+                  rows={2}
+                  value={messageEn}
+                  onChange={(event) => setMessageEn(event.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label="Comptes qui gardent l'accès (adresses e-mail, une par ligne)">
               <textarea
-                className={inputClass}
-                rows={2}
-                value={messageFr}
-                onChange={(event) => setMessageFr(event.target.value)}
+                className={`${inputClass} font-mono`}
+                rows={3}
+                value={exceptions}
+                onChange={(event) => setExceptions(event.target.value)}
               />
             </Field>
-            <Field label="Message en anglais">
-              <textarea
-                className={inputClass}
-                rows={2}
-                value={messageEn}
-                onChange={(event) => setMessageEn(event.target.value)}
-              />
-            </Field>
-          </div>
-          <Field label="Comptes qui gardent l'accès (adresses e-mail, une par ligne)">
-            <textarea
-              className={`${inputClass} font-mono`}
-              rows={3}
-              value={exceptions}
-              onChange={(event) => setExceptions(event.target.value)}
-            />
-          </Field>
-          <p className="text-sm text-muted">
-            Dès l'enregistrement, les machines connectées affichent l'annonce. À
-            l'heure prévue, les autres comptes perdent l'accès et voient le
-            message ; les données restent intactes.
-          </p>
-          <ErrorText>{failure}</ErrorText>
-          <div>
-            <Button kind="primary" type="submit" disabled={busy || !duration}>
-              {status?.state === "none" ? "Programmer" : "Enregistrer"}
-            </Button>
-          </div>
-        </form>
-      </Card>
+            <p className="text-sm text-muted">
+              Dès l'enregistrement, les machines connectées affichent l'annonce.
+              À l'heure prévue, les autres comptes perdent l'accès et voient le
+              message ; les données restent intactes.
+            </p>
+            <ErrorText>{failure}</ErrorText>
+            <div>
+              <Button kind="primary" type="submit" disabled={busy || !duration}>
+                {status?.state === "none" ? "Programmer" : "Enregistrer"}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </Writable>
     </div>
   );
 }

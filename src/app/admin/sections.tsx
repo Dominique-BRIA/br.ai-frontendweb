@@ -78,6 +78,7 @@ export function OverviewSection({
         subtitle="La santé de la plateforme en un coup d'œil"
         actions={
           <Button
+            safe
             icon={RefreshCw}
             title="Actualiser"
             onClick={() => void reload()}

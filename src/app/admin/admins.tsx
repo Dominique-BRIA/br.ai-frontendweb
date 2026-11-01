@@ -2,8 +2,8 @@
 
 import { Check, Pencil, Power, UserPlus, Wand2, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { AccessBadges, AccessPicker } from "./access";
 import { api, dateTime, useAdminData } from "./api";
-import { PERMISSIONS, type Permission } from "./permissions";
 import {
   Badge,
   Button,
@@ -15,6 +15,7 @@ import {
   PageHeader,
   Row,
   Table,
+  Writable,
 } from "./ui";
 
 interface Admin {
@@ -37,81 +38,6 @@ function generatePassword(length = 16): string {
   );
 }
 
-const isFull = (permissions: readonly string[]) =>
-  PERMISSIONS.every((permission) => permissions.includes(permission.id));
-
-/** Les cases à cocher des sections : à la création d'un compte et pour modifier ses accès. */
-function PermissionPicker({
-  value,
-  onChange,
-}: {
-  value: Permission[];
-  onChange: (value: Permission[]) => void;
-}) {
-  const toggle = (id: Permission) =>
-    onChange(
-      value.includes(id) ? value.filter((item) => item !== id) : [...value, id],
-    );
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-3 text-xs">
-        <button
-          type="button"
-          className="font-medium text-accent hover:underline"
-          onClick={() =>
-            onChange(PERMISSIONS.map((permission) => permission.id))
-          }
-        >
-          Tout cocher
-        </button>
-        <button
-          type="button"
-          className="font-medium text-muted hover:underline"
-          onClick={() => onChange([])}
-        >
-          Tout décocher
-        </button>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {PERMISSIONS.map((permission) => (
-          <label
-            key={permission.id}
-            className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent-soft"
-          >
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-[var(--primary)]"
-              checked={value.includes(permission.id)}
-              onChange={() => toggle(permission.id)}
-            />
-            {permission.label}
-          </label>
-        ))}
-      </div>
-      <p className="text-xs text-muted">
-        La vue d'ensemble et le profil restent ouverts à tous les comptes.
-      </p>
-    </div>
-  );
-}
-
-function AccessBadges({ permissions }: { permissions: string[] }) {
-  if (isFull(permissions))
-    return <Badge tone="accent">Tout le tableau de bord</Badge>;
-  const granted = PERMISSIONS.filter((permission) =>
-    permissions.includes(permission.id),
-  );
-  if (granted.length === 0)
-    return <span className="text-sm text-muted">Vue d'ensemble seule</span>;
-  return (
-    <div className="flex flex-wrap gap-1">
-      {granted.map((permission) => (
-        <Badge key={permission.id}>{permission.label}</Badge>
-      ))}
-    </div>
-  );
-}
-
 /** Les comptes de l'équipe interne : ajouter un collègue, régler ses accès, le désactiver. */
 export function AdminsSection({
   onSignedOut,
@@ -127,12 +53,12 @@ export function AdminsSection({
   const [actionError, setActionError] = useState<string | null>(null);
   const [editing, setEditing] = useState<{
     id: string;
-    permissions: Permission[];
+    permissions: string[];
   } | null>(null);
 
   const update = async (
     admin: Admin,
-    body: { disabled?: boolean; permissions?: Permission[] },
+    body: { disabled?: boolean; permissions?: string[] },
   ) => {
     setActionError(null);
     try {
@@ -173,7 +99,7 @@ export function AdminsSection({
                   <Cell>
                     {open && editing ? (
                       <div className="flex min-w-72 flex-col gap-3">
-                        <PermissionPicker
+                        <AccessPicker
                           value={editing.permissions}
                           onChange={(permissions) =>
                             setEditing({ id: admin.id, permissions })
@@ -201,7 +127,7 @@ export function AdminsSection({
                         </div>
                       </div>
                     ) : (
-                      <AccessBadges permissions={admin.permissions} />
+                      <AccessBadges grants={admin.permissions} />
                     )}
                   </Cell>
                   <Cell>{dateTime(admin.lastLoginAt)}</Cell>
@@ -220,12 +146,7 @@ export function AdminsSection({
                           onClick={() =>
                             setEditing({
                               id: admin.id,
-                              permissions: admin.permissions.filter(
-                                (permission): permission is Permission =>
-                                  PERMISSIONS.some(
-                                    (item) => item.id === permission,
-                                  ),
-                              ),
+                              permissions: admin.permissions,
                             })
                           }
                         >
@@ -250,7 +171,9 @@ export function AdminsSection({
         )}
       </Card>
 
-      <AddAdmin onAdded={reload} />
+      <Writable>
+        <AddAdmin onAdded={reload} />
+      </Writable>
     </div>
   );
 }
@@ -259,7 +182,7 @@ function AddAdmin({ onAdded }: { onAdded: () => Promise<void> }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{
     name: string;
@@ -336,7 +259,7 @@ function AddAdmin({ onAdded }: { onAdded: () => Promise<void> }) {
         </div>
         <div className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium text-muted">Accès</span>
-          <PermissionPicker value={permissions} onChange={setPermissions} />
+          <AccessPicker value={permissions} onChange={setPermissions} />
         </div>
         <div className="flex flex-col gap-3 lg:col-span-2">
           <ErrorText>{error}</ErrorText>

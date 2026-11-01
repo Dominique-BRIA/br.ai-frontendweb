@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BarChart3,
   ChevronLeft,
+  Eye,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -24,7 +25,7 @@ import { AdminsSection } from "./admins";
 import { api, SignedOut } from "./api";
 import { BetaRequestsSection } from "./beta";
 import { MaintenanceSection } from "./maintenance";
-import { initials, type Me } from "./permissions";
+import { initials, levelOf, type Me } from "./permissions";
 import { ProfileSection } from "./profile";
 import { PromoSection } from "./promo";
 import {
@@ -34,7 +35,7 @@ import {
   UsersSection,
 } from "./sections";
 import { FeedbackSection, SettingsSection } from "./settings";
-import { ErrorText, Field, inputClass } from "./ui";
+import { ErrorText, Field, inputClass, ReadOnlyContext } from "./ui";
 
 const SECTIONS = [
   { id: "vue-d-ensemble", label: "Vue d'ensemble", icon: LayoutDashboard },
@@ -61,7 +62,16 @@ const sectionFromHash = (): SectionId => {
 
 /** La vue d'ensemble et le profil sont ouverts à tous ; les autres sections, selon les droits. */
 const canOpen = (me: Me | null, id: SectionId) =>
-  id === "vue-d-ensemble" || id === "profil" || !!me?.permissions.includes(id);
+  id === "vue-d-ensemble" ||
+  id === "profil" ||
+  (!!me && levelOf(me.permissions, id) !== "none");
+
+/** Section accordée en lecture seule à ce compte. */
+const readOnlyFor = (me: Me | null, id: SectionId) =>
+  !!me &&
+  id !== "vue-d-ensemble" &&
+  id !== "profil" &&
+  levelOf(me.permissions, id) === "read";
 
 /** Le tableau de bord d'administration de <br/>, réservé à l'équipe interne. */
 export function Dashboard() {
@@ -225,33 +235,50 @@ export function Dashboard() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="mx-auto max-w-7xl">
-            {shown === "vue-d-ensemble" && (
-              <OverviewSection onSignedOut={signedOut} onOpen={go} />
-            )}
-            {shown === "utilisateurs" && (
-              <UsersSection onSignedOut={signedOut} />
-            )}
-            {shown === "equipes" && <TeamsSection onSignedOut={signedOut} />}
-            {shown === "couts" && <CostsSection onSignedOut={signedOut} />}
-            {shown === "codes" && <PromoSection onSignedOut={signedOut} />}
-            {shown === "demandes" && (
-              <BetaRequestsSection onSignedOut={signedOut} />
-            )}
-            {shown === "retours" && <FeedbackSection onSignedOut={signedOut} />}
-            {shown === "maintenance" && (
-              <MaintenanceSection onSignedOut={signedOut} />
-            )}
-            {shown === "comptes" && (
-              <AdminsSection onSignedOut={signedOut} selfId={me?.id ?? null} />
-            )}
-            {shown === "reglages" && (
-              <SettingsSection onSignedOut={signedOut} />
-            )}
-            {shown === "profil" && me && (
-              <ProfileSection me={me} onSaved={loadMe} />
-            )}
-          </div>
+          <ReadOnlyContext.Provider value={readOnlyFor(me, shown)}>
+            <div className="mx-auto max-w-7xl">
+              {readOnlyFor(me, shown) && (
+                <p className="mb-4 flex items-center gap-2 rounded-lg bg-accent-soft px-4 py-2.5 text-sm">
+                  <Eye
+                    className="h-4 w-4 shrink-0 text-accent"
+                    aria-hidden="true"
+                  />
+                  Lecture seule : vous pouvez consulter cette section, sans la
+                  modifier.
+                </p>
+              )}
+              {shown === "vue-d-ensemble" && (
+                <OverviewSection onSignedOut={signedOut} onOpen={go} />
+              )}
+              {shown === "utilisateurs" && (
+                <UsersSection onSignedOut={signedOut} />
+              )}
+              {shown === "equipes" && <TeamsSection onSignedOut={signedOut} />}
+              {shown === "couts" && <CostsSection onSignedOut={signedOut} />}
+              {shown === "codes" && <PromoSection onSignedOut={signedOut} />}
+              {shown === "demandes" && (
+                <BetaRequestsSection onSignedOut={signedOut} />
+              )}
+              {shown === "retours" && (
+                <FeedbackSection onSignedOut={signedOut} />
+              )}
+              {shown === "maintenance" && (
+                <MaintenanceSection onSignedOut={signedOut} />
+              )}
+              {shown === "comptes" && (
+                <AdminsSection
+                  onSignedOut={signedOut}
+                  selfId={me?.id ?? null}
+                />
+              )}
+              {shown === "reglages" && (
+                <SettingsSection onSignedOut={signedOut} />
+              )}
+              {shown === "profil" && me && (
+                <ProfileSection me={me} onSaved={loadMe} />
+              )}
+            </div>
+          </ReadOnlyContext.Provider>
         </main>
       </div>
     </div>

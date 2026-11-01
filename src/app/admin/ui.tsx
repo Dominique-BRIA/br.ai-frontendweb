@@ -1,12 +1,33 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 
 /**
  * Éléments du tableau de bord : fond gris clair, cartes blanches arrondies avec une ombre
  * légère (et leur équivalent sombre), bleu du logo pour les actions et l'élément actif.
  */
+
+/**
+ * Vrai dans une section ouverte en lecture seule : les boutons d'action disparaissent et les
+ * formulaires se figent. Le serveur refuse de toute façon les modifications.
+ */
+export const ReadOnlyContext = createContext(false);
+export const useReadOnly = () => useContext(ReadOnlyContext);
+
+/** Ce qui ne sert qu'à modifier : masqué en lecture seule. */
+export function Writable({ children }: { children: ReactNode }) {
+  return useReadOnly() ? null : children;
+}
+
+/** Des champs à consulter sans pouvoir les changer en lecture seule. */
+export function Locked({ children }: { children: ReactNode }) {
+  return (
+    <fieldset disabled={useReadOnly()} className="contents">
+      {children}
+    </fieldset>
+  );
+}
 
 const cx = (...classes: (string | false | null | undefined)[]) =>
   classes.filter(Boolean).join(" ");
@@ -215,7 +236,10 @@ export function Button({
   disabled,
   icon: Icon,
   title,
+  safe = false,
 }: {
+  /** Bouton qui ne modifie rien (actualiser, naviguer) : gardé en lecture seule. */
+  safe?: boolean;
   children?: ReactNode;
   onClick?: () => void;
   kind?: "primary" | "outline" | "ghost" | "danger";
@@ -224,12 +248,14 @@ export function Button({
   icon?: LucideIcon;
   title?: string;
 }) {
+  const readOnly = useReadOnly();
   const styles = {
     primary: "bg-primary text-white shadow-sm hover:brightness-110",
     outline: "border border-border bg-card hover:bg-accent-soft",
     ghost: "text-muted hover:bg-accent-soft",
     danger: "border border-danger/40 text-danger hover:bg-danger/10",
   };
+  if (readOnly && !safe) return null;
   return (
     <button
       type={type}

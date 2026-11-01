@@ -13,6 +13,7 @@ import {
   PageHeader,
   Row,
   Table,
+  Writable,
 } from "./ui";
 
 interface PromoCode {
@@ -93,31 +94,33 @@ export function PromoSection({ onSignedOut }: { onSignedOut: () => void }) {
         title="Codes promo"
         subtitle="Formules offertes, essais, crédits en bonus et réductions"
       />
-      <Card
-        title="Nouveau code"
-        description="Un code choisi, ou un lot de codes uniques générés"
-      >
-        <PromoForm
-          plans={plans.data?.plans ?? []}
-          onCreated={async (codes) => {
-            setCreated(codes);
-            await reload();
-          }}
-        />
-        {created.length > 0 && (
-          <div className="mt-3 rounded-md border border-accent p-3">
-            <p className="mb-2 text-sm font-medium">
-              {created.length} code(s) créé(s) :
-            </p>
-            <textarea
-              readOnly
-              className={`${inputClass} w-full font-mono`}
-              rows={Math.min(created.length, 8)}
-              value={created.join("\n")}
-            />
-          </div>
-        )}
-      </Card>
+      <Writable>
+        <Card
+          title="Nouveau code"
+          description="Un code choisi, ou un lot de codes uniques générés"
+        >
+          <PromoForm
+            plans={plans.data?.plans ?? []}
+            onCreated={async (codes) => {
+              setCreated(codes);
+              await reload();
+            }}
+          />
+          {created.length > 0 && (
+            <div className="mt-3 rounded-md border border-accent p-3">
+              <p className="mb-2 text-sm font-medium">
+                {created.length} code(s) créé(s) :
+              </p>
+              <textarea
+                readOnly
+                className={`${inputClass} w-full font-mono`}
+                rows={Math.min(created.length, 8)}
+                value={created.join("\n")}
+              />
+            </div>
+          )}
+        </Card>
+      </Writable>
       <Card title="Codes existants">
         <ErrorText>{error}</ErrorText>
         <Table
