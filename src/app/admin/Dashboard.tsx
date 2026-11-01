@@ -24,6 +24,8 @@ import { AdminsSection } from "./admins";
 import { api, SignedOut } from "./api";
 import { BetaRequestsSection } from "./beta";
 import { MaintenanceSection } from "./maintenance";
+import { initials, type Me } from "./permissions";
+import { ProfileSection } from "./profile";
 import { PromoSection } from "./promo";
 import {
   CostsSection,
@@ -47,13 +49,19 @@ const SECTIONS = [
   { id: "reglages", label: "Réglages", icon: Settings },
 ] as const;
 
-type SectionId = (typeof SECTIONS)[number]["id"];
+/** Le profil n'est pas dans le menu : on l'ouvre en cliquant sur son nom, en bas. */
+type SectionId = (typeof SECTIONS)[number]["id"] | "profil";
 
 const sectionFromHash = (): SectionId => {
   const hash =
     typeof window === "undefined" ? "" : window.location.hash.slice(1);
+  if (hash === "profil") return "profil";
   return SECTIONS.find((item) => item.id === hash)?.id ?? "vue-d-ensemble";
 };
+
+/** La vue d'ensemble et le profil sont ouverts à tous ; les autres sections, selon les droits. */
+const canOpen = (me: Me | null, id: SectionId) =>
+  id === "vue-d-ensemble" || id === "profil" || !!me?.permissions.includes(id);
 
 /** Le tableau de bord d'administration de <br/>, réservé à l'équipe interne. */
 export function Dashboard() {
@@ -62,19 +70,21 @@ export function Dashboard() {
   );
   const [section, setSection] = useState<SectionId>("vue-d-ensemble");
   const [collapsed, setCollapsed] = useState(false);
-  const [adminName, setAdminName] = useState<string | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const signedOut = useCallback(() => setState("signedOut"), []);
 
-  // Le nom du compte connecté, pour la barre du haut.
+  // Le compte connecté : son nom en bas du menu, ses droits pour les sections.
+  const loadMe = useCallback(async () => {
+    const response = await fetch("/api/admin/session").catch(() => null);
+    const json = response?.ok
+      ? ((await response.json()) as { admin?: Me })
+      : null;
+    setMe(json?.admin ?? null);
+  }, []);
+
   useEffect(() => {
-    if (state !== "signedIn") return;
-    fetch("/api/admin/session")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((json: { admin?: { name: string } } | null) =>
-        setAdminName(json?.admin?.name ?? null),
-      )
-      .catch(() => setAdminName(null));
-  }, [state]);
+    if (state === "signedIn") void loadMe();
+  }, [state, loadMe]);
 
   useEffect(() => {
     // La section suit l'adresse (#utilisateurs…) : une page rechargée y revient.
@@ -95,9 +105,13 @@ export function Dashboard() {
     return <SignIn onSignedIn={() => setState("signedIn")} />;
 
   const go = (id: SectionId) => {
+    if (!canOpen(me, id)) return;
     window.location.hash = id;
     setSection(id);
   };
+  // Une adresse vers une section interdite revient à la vue d'ensemble.
+  const shown = me && !canOpen(me, section) ? "vue-d-ensemble" : section;
+  const visible = SECTIONS.filter((item) => !me || canOpen(me, item.id));
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -122,8 +136,8 @@ export function Dashboard() {
           className="flex-1 space-y-1 overflow-y-auto px-2 py-4"
           aria-label="Sections"
         >
-          {SECTIONS.map((item) => {
-            const active = section === item.id;
+          {visible.map((item) => {
+            const active = shown === item.id;
             return (
               <button
                 key={item.id}
@@ -146,7 +160,39 @@ export function Dashboard() {
           })}
         </nav>
 
-        <div className="border-t border-border p-2">
+        <div className="flex flex-col gap-2 border-t border-border p-3">
+          {collapsed ? (
+            <ThemeToggle className="mx-auto" />
+          ) : (
+            <ThemeToggle withLabel className="w-full justify-center" />
+          )}
+          <button
+            type="button"
+            onClick={() => go("profil")}
+            aria-current={shown === "profil" ? "page" : undefined}
+            title="Mon profil"
+            className={`flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-accent-soft ${
+              shown === "profil" ? "bg-accent-soft" : ""
+            }`}
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+              {me ? (
+                initials(me.name)
+              ) : (
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              )}
+            </span>
+            {!collapsed && (
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold">
+                  {me?.name ?? "Équipe interne"}
+                </span>
+                <span className="block truncate text-xs text-muted">
+                  {me?.email ?? ""}
+                </span>
+              </span>
+            )}
+          </button>
           <button
             type="button"
             onClick={async () => {
@@ -154,16 +200,16 @@ export function Dashboard() {
               setState("signedOut");
             }}
             title={collapsed ? "Déconnexion" : undefined}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2.5 text-sm font-semibold text-danger transition-colors hover:bg-danger/10"
           >
-            <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
             {!collapsed && <span>Déconnexion</span>}
           </button>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
+        <header className="flex h-16 shrink-0 items-center border-b border-border bg-card px-6">
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
@@ -176,40 +222,34 @@ export function Dashboard() {
               <ChevronLeft className="h-5 w-5" />
             )}
           </button>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <span className="hidden text-sm text-muted sm:inline">
-              {adminName ?? "Équipe interne"}
-            </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#1860a0] to-[#0e385e] text-white">
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            </div>
-          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-7xl">
-            {section === "vue-d-ensemble" && (
+            {shown === "vue-d-ensemble" && (
               <OverviewSection onSignedOut={signedOut} onOpen={go} />
             )}
-            {section === "utilisateurs" && (
+            {shown === "utilisateurs" && (
               <UsersSection onSignedOut={signedOut} />
             )}
-            {section === "equipes" && <TeamsSection onSignedOut={signedOut} />}
-            {section === "couts" && <CostsSection onSignedOut={signedOut} />}
-            {section === "codes" && <PromoSection onSignedOut={signedOut} />}
-            {section === "demandes" && (
+            {shown === "equipes" && <TeamsSection onSignedOut={signedOut} />}
+            {shown === "couts" && <CostsSection onSignedOut={signedOut} />}
+            {shown === "codes" && <PromoSection onSignedOut={signedOut} />}
+            {shown === "demandes" && (
               <BetaRequestsSection onSignedOut={signedOut} />
             )}
-            {section === "retours" && (
-              <FeedbackSection onSignedOut={signedOut} />
-            )}
-            {section === "maintenance" && (
+            {shown === "retours" && <FeedbackSection onSignedOut={signedOut} />}
+            {shown === "maintenance" && (
               <MaintenanceSection onSignedOut={signedOut} />
             )}
-            {section === "comptes" && <AdminsSection onSignedOut={signedOut} />}
-            {section === "reglages" && (
+            {shown === "comptes" && (
+              <AdminsSection onSignedOut={signedOut} selfId={me?.id ?? null} />
+            )}
+            {shown === "reglages" && (
               <SettingsSection onSignedOut={signedOut} />
+            )}
+            {shown === "profil" && me && (
+              <ProfileSection me={me} onSaved={loadMe} />
             )}
           </div>
         </main>

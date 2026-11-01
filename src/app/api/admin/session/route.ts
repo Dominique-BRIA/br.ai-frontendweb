@@ -44,7 +44,23 @@ export async function POST(request: Request) {
   return Response.json({ admin: json.admin });
 }
 
-/** Le compte connecté, pour l'en-tête du tableau de bord. */
+/** Modifie le profil du compte connecté (nom affiché, adresse). */
+export async function PATCH(request: Request) {
+  const session = (await cookies()).get(ADMIN_COOKIE)?.value ?? null;
+  if (!session)
+    return Response.json({ error: "Connexion requise." }, { status: 401 });
+  const response = await backend("admin-auth/me", session, {
+    method: "PATCH",
+    body: await request.text(),
+  }).catch(() => null);
+  if (!response) return unreachable();
+  return new Response(response.body, {
+    status: response.status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+/** Le compte connecté : son nom en bas du menu, ses droits pour les sections. */
 export async function GET() {
   const session = (await cookies()).get(ADMIN_COOKIE)?.value ?? null;
   if (!session)
