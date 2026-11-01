@@ -1,4 +1,4 @@
-/** Adresse du serveur <br>.ia, vue depuis le serveur du site. */
+/** Adresse du serveur <br/>, vue depuis le serveur du site. */
 export const BACKEND_URL = (
   process.env.BRIA_API_URL ?? "http://127.0.0.1:4000"
 ).replace(/\/+$/, "");
@@ -9,7 +9,7 @@ export const BACKEND_URL = (
  */
 export const ADMIN_COOKIE = "bria_admin";
 
-/** Appelle une route /admin du serveur <br>.ia avec le jeton d'administration. */
+/** Appelle une route /admin du serveur <br/> avec le jeton d'administration. */
 export function backendAdmin(
   path: string,
   token: string,

@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { Logo } from "../Logo";
 import { api, SignedOut } from "./api";
 import { MaintenanceSection } from "./maintenance";
 import { PromoSection } from "./promo";
@@ -26,7 +27,7 @@ const SECTIONS = [
 
 type SectionId = (typeof SECTIONS)[number]["id"];
 
-/** Le tableau de bord d'administration de <br>.ia, réservé à l'équipe interne. */
+/** Le tableau de bord d'administration de <br/>, réservé à l'équipe interne. */
 export function Dashboard() {
   const [state, setState] = useState<"checking" | "signedOut" | "signedIn">(
     "checking",
@@ -60,7 +61,7 @@ export function Dashboard() {
             className="rounded-md"
           />
           <div>
-            <p className="font-mono text-sm text-muted">{"<br>.ia"}</p>
+            <p className="font-mono text-sm text-muted">{"<br/>"}</p>
             <h1 className="text-lg font-semibold">Tableau de bord</h1>
           </div>
         </div>
@@ -135,8 +136,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-4 py-16">
-      {/* biome-ignore lint/performance/noImgElement: petite image fixe, inutile de passer par l'optimiseur. */}
-      <img src="/logo-complet.jpg" alt="<br>.ia" className="rounded-md" />
+      <Logo className="mx-auto h-auto w-40 rounded-md" />
       <h1 className="text-xl font-semibold">Tableau de bord</h1>
       <p className="text-sm text-muted">
         Réservé à l'équipe interne. Saisissez le jeton d'administration du

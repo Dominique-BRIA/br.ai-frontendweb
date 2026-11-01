@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const check = await backendAdmin("overview", token).catch(() => null);
   if (!check)
     return Response.json(
-      { error: "Le serveur <br>.ia ne répond pas." },
+      { error: "Le serveur <br/> ne répond pas." },
       { status: 502 },
     );
   if (!check.ok)

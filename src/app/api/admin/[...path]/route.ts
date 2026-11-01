@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE, backendAdmin } from "@/lib/admin";
 
 /**
- * Relais du tableau de bord vers les routes /admin du serveur <br>.ia : le jeton, gardé dans
+ * Relais du tableau de bord vers les routes /admin du serveur <br/> : le jeton, gardé dans
  * un cookie réservé au serveur du site, est ajouté ici et ne passe jamais par la page.
  */
 async function relay(
@@ -25,7 +25,7 @@ async function relay(
   ).catch(() => null);
   if (!response)
     return Response.json(
-      { error: "Le serveur <br>.ia ne répond pas." },
+      { error: "Le serveur <br/> ne répond pas." },
       { status: 502 },
     );
   return new Response(response.body, {

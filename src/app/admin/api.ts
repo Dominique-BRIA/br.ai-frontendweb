@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 /** Le cookie d'administration a expiré ou n'existe pas : il faut se reconnecter. */
 export class SignedOut extends Error {}
 
-/** Appelle une route /admin du serveur <br>.ia, à travers le relais du site. */
+/** Appelle une route /admin du serveur <br/>, à travers le relais du site. */
 export async function api<T>(
   path: string,
   init: { method?: string; body?: unknown } = {},

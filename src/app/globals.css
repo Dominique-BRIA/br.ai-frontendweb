@@ -2,7 +2,7 @@
 
 /*
  * Fondations de la charte des interfaces (backend/docs/charte-interfaces.md, 1.2).
- * Le turquoise du logo comme couleur de marque, l’orange pour l’attente et les alertes,
+ * Le bleu du logo comme couleur de marque, l’orange pour l’attente et les alertes,
  * des gris neutres, de petits arrondis.
  */
 :root {
@@ -10,8 +10,8 @@
   --foreground: oklch(22% 0.01 60);
   --muted: oklch(48% 0.01 60);
   --border: oklch(90% 0.005 60);
-  --accent: oklch(52% 0.09 205);
-  --warm: oklch(62% 0.15 60);
+  --accent: #1860a0;
+  --warm: #de791a;
   --danger: oklch(55% 0.19 25);
   --card: oklch(100% 0 0);
 }
@@ -22,8 +22,8 @@
     --foreground: oklch(94% 0.005 60);
     --muted: oklch(70% 0.01 60);
     --border: oklch(30% 0.008 60);
-    --accent: oklch(70% 0.11 205);
-    --warm: oklch(78% 0.14 70);
+    --accent: #5896d8;
+    --warm: #faa03a;
     --danger: oklch(68% 0.17 25);
     --card: oklch(21% 0.006 240);
   }
