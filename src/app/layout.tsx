@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
 import "./globals.css";
 import { MaintenanceBanner } from "./MaintenanceBanner";
 import { themeScript } from "./theme";
@@ -8,6 +8,13 @@ const plexSans = IBM_Plex_Sans({
   variable: "--font-plex-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+});
+
+// Pour les grands titres de la page d'accueil.
+const plexSerif = IBM_Plex_Serif({
+  variable: "--font-plex-serif",
+  subsets: ["latin"],
+  weight: ["400"],
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -43,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr"
       suppressHydrationWarning
-      className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} h-full antialiased`}
     >
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: petit script fixe qui applique le thème avant l'affichage. */}

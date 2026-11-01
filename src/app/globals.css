@@ -56,6 +56,7 @@
   --color-card: var(--card);
   --color-field: var(--field);
   --font-sans: var(--font-plex-sans);
+  --font-serif: var(--font-plex-serif);
   --font-mono: var(--font-plex-mono);
   --radius-sm: 4px;
   --radius-md: 6px;

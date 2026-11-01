@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BarChart3,
   ChevronLeft,
+  Inbox,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -19,6 +20,7 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Emblem } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { api, SignedOut } from "./api";
+import { BetaRequestsSection } from "./beta";
 import { MaintenanceSection } from "./maintenance";
 import { PromoSection } from "./promo";
 import {
@@ -36,6 +38,7 @@ const SECTIONS = [
   { id: "equipes", label: "Équipes", icon: UsersRound },
   { id: "couts", label: "Coûts d'IA", icon: BarChart3 },
   { id: "codes", label: "Codes promo", icon: TicketPercent },
+  { id: "demandes", label: "Demandes de bêta", icon: Inbox },
   { id: "retours", label: "Retours", icon: MessageSquareText },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
   { id: "reglages", label: "Réglages", icon: Settings },
@@ -192,6 +195,9 @@ export function Dashboard() {
             {section === "equipes" && <TeamsSection onSignedOut={signedOut} />}
             {section === "couts" && <CostsSection onSignedOut={signedOut} />}
             {section === "codes" && <PromoSection onSignedOut={signedOut} />}
+            {section === "demandes" && (
+              <BetaRequestsSection onSignedOut={signedOut} />
+            )}
             {section === "retours" && (
               <FeedbackSection onSignedOut={signedOut} />
             )}
