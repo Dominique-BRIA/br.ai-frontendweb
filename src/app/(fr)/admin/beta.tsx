@@ -9,6 +9,8 @@ import {
   Card,
   Cell,
   ErrorText,
+  Field,
+  inputClass,
   PageHeader,
   Row,
   Table,
@@ -23,7 +25,7 @@ interface BetaRequest {
   createdAt: string;
 }
 
-/** Demandes d'accès laissées sur la page d'accueil : un clic envoie le code d'invitation. */
+/** Demandes laissées sur la page d'accueil : on choisit les crédits offerts, puis un clic envoie le code. */
 export function BetaRequestsSection({
   onSignedOut,
 }: {
@@ -35,13 +37,25 @@ export function BetaRequestsSection({
   );
   const [sending, setSending] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [credits, setCredits] = useState("");
+  const [months, setMonths] = useState("1");
+  const offer = { credits: Number(credits), months: Number(months) };
+  const offerValid =
+    Number.isInteger(offer.credits) &&
+    offer.credits > 0 &&
+    Number.isInteger(offer.months) &&
+    offer.months > 0;
 
   const send = async (request: BetaRequest) => {
     setSending(request.id);
     setSendError(null);
     const action = request.inviteCode ? "resend" : "invite";
     try {
-      await api(`beta-requests/${request.id}/${action}`, { method: "POST" });
+      await api(`beta-requests/${request.id}/${action}`, {
+        method: "POST",
+        // Un code encore valable repart tel quel, sans montant à ressaisir.
+        body: offerValid ? offer : {},
+      });
       await reload();
     } catch (cause) {
       setSendError((cause as Error).message);
@@ -62,6 +76,26 @@ export function BetaRequestsSection({
             : "Laissées sur la page d'accueil du site"
         }
       />
+      <Card title="Crédits offerts par le code">
+        <div className="grid gap-3 md:grid-cols-4">
+          <Field label="Crédits par mois">
+            <input
+              className={inputClass}
+              inputMode="numeric"
+              value={credits}
+              onChange={(event) => setCredits(event.target.value)}
+            />
+          </Field>
+          <Field label="Pendant (mois)">
+            <input
+              className={inputClass}
+              inputMode="numeric"
+              value={months}
+              onChange={(event) => setMonths(event.target.value)}
+            />
+          </Field>
+        </div>
+      </Card>
       <Card title="Adresses reçues">
         <ErrorText>{error ?? sendError}</ErrorText>
         {data?.requests.length === 0 && (
@@ -77,7 +111,7 @@ export function BetaRequestsSection({
                 <Cell>{dateTime(request.createdAt)}</Cell>
                 <Cell>
                   {request.joined ? (
-                    <Badge tone="accent">Compte créé</Badge>
+                    <Badge tone="accent">Code utilisé</Badge>
                   ) : request.inviteCode ? (
                     <Badge tone="success">
                       Invitée le {dateTime(request.invitedAt)}
@@ -97,7 +131,7 @@ export function BetaRequestsSection({
                       <Button
                         kind={request.inviteCode ? "outline" : "primary"}
                         icon={request.inviteCode ? RotateCw : Send}
-                        disabled={sending !== null}
+                        disabled={sending !== null || (!request.inviteCode && !offerValid)}
                         onClick={() => void send(request)}
                       >
                         {sending === request.id

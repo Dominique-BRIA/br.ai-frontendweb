@@ -42,7 +42,6 @@ const KINDS: Record<string, string> = {
   credits: "Crédits en bonus",
   percent: "Réduction en %",
   amount: "Réduction d'un montant",
-  beta: "Invitation à la bêta",
 };
 
 /** Ce que fait un code, en quelques mots. */
@@ -297,7 +296,7 @@ function PromoForm({
             />
           </Field>
         )}
-        {kind !== "trial" && kind !== "beta" && (
+        {kind !== "trial" && (
           <Field label="Durée en mois (vide : une fois)">
             <input
               className={inputClass}
