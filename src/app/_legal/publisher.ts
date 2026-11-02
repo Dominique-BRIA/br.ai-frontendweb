@@ -4,7 +4,7 @@
  * commerciale (statut juridique, numéro d'immatriculation, adresse, adresse e-mail de contact).
  */
 export const PUBLISHER = {
-  name: "Dominique Bria",
+  name: "BRIA TOGBE Dominique Constantin",
   /** Exemple : « Entrepreneur individuel », ou la forme de la société. */
   status: null as string | null,
   /** Numéro d'immatriculation (RCCM, SIREN…), s'il existe. */
