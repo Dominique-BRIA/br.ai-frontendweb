@@ -10,7 +10,7 @@ export const PUBLISHER = {
   /** Numéro d'immatriculation (RCCM, SIREN…), s'il existe. */
   registration: null as string | null,
   address: null as string | null,
-  email: null as string | null,
+  email: "d.bria00@gmail.com" as string | null,
   /** Droit applicable et tribunaux compétents, à préciser avec l'immatriculation. */
   jurisdiction: null as string | null,
 };
