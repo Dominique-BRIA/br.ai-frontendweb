@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { type Lang, TEXTS } from "./i18n";
 import { THEME_KEY } from "./theme";
 
 const systemDark = () =>
@@ -14,10 +15,13 @@ const systemDark = () =>
 export function ThemeToggle({
   className = "",
   withLabel = false,
+  lang = "fr",
 }: {
   className?: string;
   withLabel?: boolean;
+  lang?: Lang;
 }) {
+  const t = TEXTS[lang].theme;
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
@@ -44,7 +48,7 @@ export function ThemeToggle({
     }
   };
 
-  const label = dark ? "Passer en mode clair" : "Passer en mode sombre";
+  const label = dark ? t.toLight : t.toDark;
   const Icon = dark ? Sun : Moon;
   // Avec son libellé, le bouton nomme le mode vers lequel il bascule (« Sombre », « Clair »).
   if (withLabel) {
@@ -56,7 +60,7 @@ export function ThemeToggle({
         className={`inline-flex h-10 items-center gap-2 rounded-xl bg-card px-4 text-sm font-semibold text-foreground shadow-sm ring-1 ring-border transition-colors hover:text-accent ${className}`}
       >
         <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-        {dark ? "Clair" : "Sombre"}
+        {dark ? t.light : t.dark}
       </button>
     );
   }

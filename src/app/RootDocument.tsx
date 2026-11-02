@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
+import type { ReactNode } from "react";
 import "./globals.css";
+import type { Lang } from "./i18n";
 import { MaintenanceBanner } from "./MaintenanceBanner";
 import { themeScript } from "./theme";
 
@@ -23,32 +25,37 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  title: "<br/>",
-  description:
-    "Un chat d'équipe où l'IA note vos décisions, arbitre vos désaccords et écrit le code sur vos machines.",
-  // L'icône de l'onglet suit le thème du navigateur : traits bleus sur fond clair, clairs sur fond sombre.
-  icons: {
-    icon: [
-      {
-        url: "/icone-claire.svg",
-        type: "image/svg+xml",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icone-sombre.svg",
-        type: "image/svg+xml",
-        media: "(prefers-color-scheme: dark)",
-      },
-    ],
-  },
+/** L'icône de l'onglet suit le thème du navigateur : traits bleus sur fond clair, clairs sur fond sombre. */
+export const icons: Metadata["icons"] = {
+  icon: [
+    {
+      url: "/icone-claire.svg",
+      type: "image/svg+xml",
+      media: "(prefers-color-scheme: light)",
+    },
+    {
+      url: "/icone-sombre.svg",
+      type: "image/svg+xml",
+      media: "(prefers-color-scheme: dark)",
+    },
+  ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/**
+ * Le document commun aux deux langues : chaque groupe de routes, (fr) et (en), a sa propre
+ * mise en page racine pour annoncer la bonne langue dans <html lang>.
+ */
+export function RootDocument({
+  lang,
+  children,
+}: {
+  lang: Lang;
+  children: ReactNode;
+}) {
   return (
     // La classe « dark » est posée avant l'affichage par le script du thème.
     <html
-      lang="fr"
+      lang={lang}
       suppressHydrationWarning
       className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} h-full antialiased`}
     >
@@ -57,7 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="flex min-h-full flex-col font-sans">
-        <MaintenanceBanner />
+        <MaintenanceBanner lang={lang} />
         {children}
       </body>
     </html>

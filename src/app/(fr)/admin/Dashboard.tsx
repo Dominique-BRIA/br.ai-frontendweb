@@ -21,8 +21,8 @@ import {
   Wrench,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
-import { Emblem } from "../Logo";
-import { ThemeToggle } from "../ThemeToggle";
+import { Emblem } from "@/app/Logo";
+import { ThemeToggle } from "@/app/ThemeToggle";
 import { AdminsSection } from "./admins";
 import { api, SignedOut } from "./api";
 import { BetaRequestsSection } from "./beta";
