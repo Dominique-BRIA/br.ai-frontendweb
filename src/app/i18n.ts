@@ -17,19 +17,20 @@ export const TEXTS = {
     tagline: "Redonner un sens au travail d'équipe",
     pitch:
       "Un chat d'équipe où l'IA note vos décisions, arbitre vos désaccords et écrit le code sur vos machines.",
+    install: "Installer l'extension pour VS Code",
     alreadyInvited:
-      "Déjà invité ? Ouvrez <br/> dans VS Code pour vous connecter.",
+      "L'inscription est libre : ouvrez <br/> dans VS Code pour créer votre compte.",
     videoLabel: "L'emblème de Retour à la ligne en rotation",
     beta: {
       label: "Adresse e-mail",
       placeholder: "Saisissez votre e-mail",
-      submit: "Demander une invitation",
+      submit: "Recevoir un code d'invitation",
       sending: "Envoi…",
-      note: "La bêta privée ouvre sur invitation. Votre adresse ne sert qu'à vous l'envoyer.",
+      note: "Le code donne des crédits d'IA à votre équipe. Votre adresse ne sert qu'à vous l'envoyer.",
       failed: "La demande n'a pas pu être envoyée.",
       receivedTitle: "Demande reçue",
       receivedBefore: "Nous écrirons à ",
-      receivedAfter: " dès qu'une place s'ouvre, avec votre code d'invitation.",
+      receivedAfter: " avec votre code d'invitation et ses crédits d'IA.",
     },
     theme: {
       dark: "Sombre",
@@ -57,18 +58,19 @@ export const TEXTS = {
     tagline: "Giving meaning back to teamwork",
     pitch:
       "A team chat where AI keeps track of your decisions, settles disagreements and writes the code on your machines.",
-    alreadyInvited: "Already invited? Open <br/> in VS Code to sign in.",
+    install: "Install the VS Code extension",
+    alreadyInvited: "Sign-up is open: open <br/> in VS Code to create your account.",
     videoLabel: "The Retour à la ligne emblem, rotating",
     beta: {
       label: "Email address",
       placeholder: "Enter your email",
-      submit: "Request an invitation",
+      submit: "Get an invitation code",
       sending: "Sending…",
-      note: "The private beta is invitation-only. Your address is only used to send you one.",
+      note: "The code gives your team AI credits. Your address is only used to send it to you.",
       failed: "Your request could not be sent.",
       receivedTitle: "Request received",
       receivedBefore: "We'll write to ",
-      receivedAfter: " as soon as a spot opens, with your invitation code.",
+      receivedAfter: " with your invitation code and its AI credits.",
     },
     theme: {
       dark: "Dark",

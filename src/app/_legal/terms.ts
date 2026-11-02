@@ -2,7 +2,7 @@ import type { Lang } from "../i18n";
 import type { LegalDocument } from "./LegalPage";
 import { PUBLISHER } from "./publisher";
 
-/** Conditions d'utilisation du service pendant la bêta privée. */
+/** Conditions d'utilisation du service pendant la bêta. */
 export const TERMS: Record<Lang, LegalDocument> = {
   fr: {
     title: "Conditions d'utilisation",
@@ -16,9 +16,9 @@ export const TERMS: Record<Lang, LegalDocument> = {
         ],
       },
       {
-        title: "Bêta privée",
+        title: "Bêta",
         blocks: [
-          "Le service est en bêta privée, accessible sur invitation et gratuit pendant cette période. Il peut évoluer, être interrompu pour maintenance ou présenter des erreurs. Les fonctions, les quotas et les formules peuvent changer avant l'ouverture commerciale ; nous vous prévenons de tout changement important.",
+          "Le service est en bêta, ouvert à l'inscription et gratuit pendant cette période. L'IA fonctionne avec des crédits, obtenus avec un code d'invitation. Il peut évoluer, être interrompu pour maintenance ou présenter des erreurs. Les fonctions, les quotas et les formules peuvent changer avant l'ouverture commerciale ; nous vous prévenons de tout changement important.",
         ],
       },
       {
@@ -100,9 +100,9 @@ export const TERMS: Record<Lang, LegalDocument> = {
         ],
       },
       {
-        title: "Private beta",
+        title: "Beta",
         blocks: [
-          "The service is in private beta, invitation-only and free during this period. It may change, be interrupted for maintenance or contain errors. Features, quotas and plans may change before the commercial launch; we will let you know about any significant change.",
+          "The service is in beta, open to sign-up and free during this period. The AI runs on credits, obtained with an invitation code. It may change, be interrupted for maintenance or contain errors. Features, quotas and plans may change before the commercial launch; we will let you know about any significant change.",
         ],
       },
       {

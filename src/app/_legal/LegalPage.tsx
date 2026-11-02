@@ -19,11 +19,11 @@ export interface LegalDocument {
 const LABELS = {
   fr: {
     updated: "Dernière mise à jour :",
-    beta: "<br/> est en bêta privée : ce texte sera complété avant l'ouverture commerciale du service.",
+    beta: "<br/> est en bêta : ce texte sera complété avant l'ouverture commerciale du service.",
   },
   en: {
     updated: "Last updated:",
-    beta: "<br/> is in private beta: this text will be completed before the service opens commercially.",
+    beta: "<br/> is in beta: this text will be completed before the service opens commercially.",
   },
 };
 

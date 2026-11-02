@@ -24,7 +24,13 @@ export function HomePage({ lang }: { lang: Lang }) {
           <div className="mt-10 flex w-full justify-center">
             <BetaRequest lang={lang} />
           </div>
-          <p className="mt-6 text-sm text-muted">{t.alreadyInvited}</p>
+          <a
+            className="mt-6 font-semibold text-accent underline underline-offset-4"
+            href="https://marketplace.visualstudio.com/items?itemName=br-ia.br-ia"
+          >
+            {t.install}
+          </a>
+          <p className="mt-2 text-sm text-muted">{t.alreadyInvited}</p>
         </section>
 
         <div className="mx-auto hidden aspect-[720/856] h-[min(78vh,800px)] overflow-hidden rounded-3xl shadow-2xl shadow-black/10 ring-1 ring-border lg:block">
