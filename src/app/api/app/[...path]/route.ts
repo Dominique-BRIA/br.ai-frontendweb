@@ -1,0 +1,45 @@
+import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
+import { memberBackend, SESSION_COOKIE, unreachable } from "@/lib/app";
+
+/** Ces routes ont leur propre relais (connexion) ou ne concernent pas les membres. */
+const RESERVED = new Set(["admin", "admin-auth", "auth", "github"]);
+
+/**
+ * Relais de la plateforme web vers le serveur <br/> : la session, gardée dans un cookie réservé
+ * au serveur du site, est ajoutée ici et ne passe jamais par la page.
+ */
+async function relay(
+  request: NextRequest,
+  ctx: RouteContext<"/api/app/[...path]">,
+) {
+  const { path } = await ctx.params;
+  if (RESERVED.has(path[0] ?? "")) {
+    return Response.json({ code: "not_found" }, { status: 404 });
+  }
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  if (!token)
+    return Response.json({ code: "unauthenticated" }, { status: 401 });
+  const body = request.method === "GET" ? undefined : await request.text();
+  const response = await memberBackend(
+    `${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`,
+    token,
+    { method: request.method, body: body || undefined },
+  ).catch(() => null);
+  if (!response) return unreachable();
+  return new Response(response.body, {
+    status: response.status,
+    headers: {
+      "Content-Type":
+        response.headers.get("Content-Type") ?? "application/json",
+    },
+  });
+}
+
+export {
+  relay as DELETE,
+  relay as GET,
+  relay as PATCH,
+  relay as POST,
+  relay as PUT,
+};

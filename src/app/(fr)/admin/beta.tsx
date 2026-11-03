@@ -131,7 +131,10 @@ export function BetaRequestsSection({
                       <Button
                         kind={request.inviteCode ? "outline" : "primary"}
                         icon={request.inviteCode ? RotateCw : Send}
-                        disabled={sending !== null || (!request.inviteCode && !offerValid)}
+                        disabled={
+                          sending !== null ||
+                          (!request.inviteCode && !offerValid)
+                        }
                         onClick={() => void send(request)}
                       >
                         {sending === request.id

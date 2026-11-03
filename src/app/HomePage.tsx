@@ -1,9 +1,9 @@
-import { BetaRequest } from "./BetaRequest";
 import { type Lang, TEXTS } from "./i18n";
+import { SignInCard } from "./SignInCard";
 import { SiteFooter, SiteHeader } from "./SiteChrome";
 
 /**
- * Page d'accueil, en français (/) et en anglais (/en) : la promesse et la demande d'invitation à
+ * Page d'accueil, en français (/) et en anglais (/en) : la promesse et l'inscription à
  * gauche, l'emblème animé à droite. Chaque mode a sa vidéo, sur le fond qui lui correspond.
  */
 export function HomePage({ lang }: { lang: Lang }) {
@@ -22,7 +22,7 @@ export function HomePage({ lang }: { lang: Lang }) {
           </p>
           <p className="mt-6 max-w-md text-muted">{t.pitch}</p>
           <div className="mt-10 flex w-full justify-center">
-            <BetaRequest lang={lang} />
+            <SignInCard lang={lang} />
           </div>
           <a
             className="mt-6 font-semibold text-accent underline underline-offset-4"
