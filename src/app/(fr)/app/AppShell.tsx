@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{ workspace, live, api, subscribe }}>
-      <div className="flex h-dvh flex-col">
+      <div className="flex h-dvh flex-col overflow-hidden">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
           <Link href="/app" className="flex items-center gap-2">
             <Emblem className="h-9 w-9" />
@@ -215,7 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <ProjectList workspace={workspace} />
           </Suspense>
-          <main className="min-w-0 flex-1 overflow-y-auto">
+          <main className="relative min-w-0 flex-1 overflow-y-auto">
             {error && !workspace ? (
               <p role="alert" className="p-6 text-danger">
                 {error}

@@ -300,7 +300,7 @@ export function ProjectChat() {
   const open = memory.filter((item) => item.status === "open");
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="relative flex h-full min-h-0">
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
           <Link
@@ -327,7 +327,7 @@ export function ProjectChat() {
               element.scrollHeight - element.scrollTop - element.clientHeight <
               80;
           }}
-          className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
+          className="relative min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
         >
           {hasMore && (
             <div className="mb-4 text-center">
