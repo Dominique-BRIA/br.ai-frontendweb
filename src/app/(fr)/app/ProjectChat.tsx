@@ -2,10 +2,16 @@
 
 import {
   ArrowLeft,
+  Check,
+  CircleAlert,
+  Clock,
   CornerUpLeft,
   Lightbulb,
+  LoaderCircle,
   Paperclip,
+  RotateCw,
   Send,
+  Trash2,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +54,18 @@ const day = (iso: string) =>
     month: "long",
   }).format(new Date(iso));
 
+/** Un message parti de la page, pas encore enregistré par le serveur. */
+interface Outgoing {
+  clientId: string;
+  body: string;
+  mentions: string[];
+  replyTo: Message["replyTo"];
+  createdAt: string;
+  status: "sending" | "failed";
+}
+
+type Status = "sending" | "failed" | "sent";
+
 function initials(author: Author): string {
   if (isAgent(author)) return "IA";
   const name = authorName(author);
@@ -75,8 +93,9 @@ export function ProjectChat() {
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [sending, setSending] = useState(false);
+  const [outgoing, setOutgoing] = useState<Outgoing[]>([]);
   const list = useRef<HTMLDivElement>(null);
+  const myUserId = workspace?.user.id ?? "";
   const atBottom = useRef(true);
 
   const add = useCallback((incoming: Message[]) => {
@@ -102,6 +121,7 @@ export function ProjectChat() {
 
   useEffect(() => {
     setMessages([]);
+    setOutgoing([]);
     setReplyTo(null);
     atBottom.current = true;
     void (async () => {
@@ -128,6 +148,19 @@ export function ProjectChat() {
           event.message.projectId === projectId
         ) {
           add([event.message]);
+          // Le temps réel peut livrer le message avant la réponse de l'envoi : on retire son double.
+          const author = event.message.author;
+          if (author.kind === "member" && author.userId === myUserId) {
+            const body = event.message.body;
+            setOutgoing((current) => {
+              const index = current.findIndex(
+                (item) => item.status === "sending" && item.body === body,
+              );
+              return index < 0
+                ? current
+                : current.filter((_, position) => position !== index);
+            });
+          }
         }
         if (
           event.type === "memory.changed" &&
@@ -137,15 +170,15 @@ export function ProjectChat() {
           void loadMemory();
         }
       }),
-    [subscribe, projectId, add, loadMemory],
+    [subscribe, projectId, add, loadMemory, myUserId],
   );
 
   // On suit le bas du fil, sauf si le membre est remonté lire les anciens messages.
   useEffect(() => {
     const element = list.current;
-    if (element && atBottom.current && messages.length > 0)
+    if (element && atBottom.current && messages.length + outgoing.length > 0)
       element.scrollTop = element.scrollHeight;
-  }, [messages]);
+  }, [messages, outgoing]);
 
   const loadOlder = async () => {
     const element = list.current;
@@ -163,41 +196,75 @@ export function ProjectChat() {
     });
   };
 
-  const send = async (event?: FormEvent) => {
-    event?.preventDefault();
-    const body = draft.trim();
-    if (!body || sending) return;
-    const lower = body.toLowerCase();
-    const mentions = (team?.members ?? [])
-      .filter((member) => member.userId !== workspace?.user.id)
-      .filter((member) =>
-        lower.includes(`@${member.displayName.toLowerCase()}`),
-      )
-      .map((member) => member.userId);
-    setSending(true);
+  /** Envoie un message en attente ; en cas d'échec, il reste affiché « non envoyé ». */
+  const submit = async (item: Outgoing) => {
+    setOutgoing((current) =>
+      current.map((entry) =>
+        entry.clientId === item.clientId
+          ? { ...entry, status: "sending" }
+          : entry,
+      ),
+    );
     try {
       const { message } = await api<{ message: Message }>(
         `projects/${projectId}/messages`,
         {
           method: "POST",
           body: {
-            body,
-            mentions,
-            ...(replyTo ? { replyToId: replyTo.id } : {}),
+            body: item.body,
+            mentions: item.mentions,
+            ...(item.replyTo ? { replyToId: item.replyTo.id } : {}),
           },
         },
       );
-      atBottom.current = true;
+      setOutgoing((current) =>
+        current.filter((entry) => entry.clientId !== item.clientId),
+      );
       add([message]);
-      setDraft("");
-      setReplyTo(null);
-      setError(null);
-    } catch (cause) {
-      setError((cause as Error).message);
-    } finally {
-      setSending(false);
+    } catch {
+      setOutgoing((current) =>
+        current.map((entry) =>
+          entry.clientId === item.clientId
+            ? { ...entry, status: "failed" }
+            : entry,
+        ),
+      );
     }
   };
+
+  // Le message part tout de suite : la zone se vide pour le suivant, et le fil montre son état.
+  const send = (event?: FormEvent) => {
+    event?.preventDefault();
+    const body = draft.trim();
+    if (!body) return;
+    const lower = body.toLowerCase();
+    const mentions = (team?.members ?? [])
+      .filter((member) => member.userId !== myUserId)
+      .filter((member) =>
+        lower.includes(`@${member.displayName.toLowerCase()}`),
+      )
+      .map((member) => member.userId);
+    const item: Outgoing = {
+      clientId: crypto.randomUUID(),
+      body,
+      mentions,
+      replyTo: replyTo
+        ? {
+            id: replyTo.id,
+            author: replyTo.author,
+            excerpt: replyTo.body.slice(0, 140),
+          }
+        : null,
+      createdAt: new Date().toISOString(),
+      status: "sending",
+    };
+    atBottom.current = true;
+    setOutgoing((current) => [...current, item]);
+    setDraft("");
+    setReplyTo(null);
+    void submit(item);
+  };
+  const sending = outgoing.some((item) => item.status === "sending");
 
   // Suggestions de mention : « @ » suivi du début d'un nom.
   const typed = /(^|\s)@([\p{L}\p{N}_-]*)$/u.exec(draft)?.[2];
@@ -218,7 +285,7 @@ export function ProjectChat() {
       !event.nativeEvent.isComposing
     ) {
       event.preventDefault();
-      void send();
+      send();
     }
   };
 
@@ -292,12 +359,35 @@ export function ProjectChat() {
                 )}
                 <MessageItem
                   message={message}
-                  myUserId={workspace?.user.id ?? ""}
+                  myUserId={myUserId}
                   onReply={() => setReplyTo(message)}
                 />
               </div>
             );
           })}
+          {outgoing.map((item) => (
+            <MessageItem
+              key={item.clientId}
+              message={{
+                id: item.clientId,
+                projectId,
+                author: { kind: "member", userId: myUserId, displayName: "" },
+                body: item.body,
+                replyTo: item.replyTo,
+                mentions: item.mentions,
+                attachments: [],
+                createdAt: item.createdAt,
+              }}
+              myUserId={myUserId}
+              status={item.status}
+              onRetry={() => void submit(item)}
+              onDiscard={() =>
+                setOutgoing((current) =>
+                  current.filter((entry) => entry.clientId !== item.clientId),
+                )
+              }
+            />
+          ))}
         </div>
 
         <form
@@ -353,11 +443,19 @@ export function ProjectChat() {
             />
             <button
               type="submit"
-              disabled={sending || !draft.trim()}
+              disabled={!draft.trim()}
               title="Envoyer"
-              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-foreground text-background transition hover:opacity-90 disabled:opacity-40"
+              aria-busy={sending}
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition hover:brightness-110 disabled:opacity-40"
             >
-              <Send className="h-4 w-4" aria-hidden="true" />
+              {sending ? (
+                <LoaderCircle
+                  className="h-4 w-4 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Send className="h-4 w-4" aria-hidden="true" />
+              )}
               <span className="sr-only">Envoyer</span>
             </button>
           </div>
@@ -411,16 +509,24 @@ export function ProjectChat() {
 function MessageItem({
   message,
   myUserId,
+  status,
   onReply,
+  onRetry,
+  onDiscard,
 }: {
   message: Message;
   myUserId: string;
-  onReply: () => void;
+  /** Pour un message en route : l'horloge, ou l'échec avec Réessayer. */
+  status?: Exclude<Status, "sent">;
+  onReply?: () => void;
+  onRetry?: () => void;
+  onDiscard?: () => void;
 }) {
   const mine =
     message.author.kind === "member" && message.author.userId === myUserId;
   const agent = isAgent(message.author);
   const mentionsMe = message.mentions.includes(myUserId);
+  const state: Status | null = mine ? (status ?? "sent") : null;
   const bubble = mine
     ? "bg-msg-sent text-msg-on-sent border-transparent"
     : agent
@@ -455,17 +561,27 @@ function MessageItem({
           <time className="text-muted" dateTime={message.createdAt}>
             {time(message.createdAt)}
           </time>
-          <button
-            type="button"
-            onClick={onReply}
-            title="Répondre"
-            className="text-muted opacity-0 transition-opacity hover:text-foreground focus:opacity-100 group-hover:opacity-100"
-          >
-            <CornerUpLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="sr-only">Répondre</span>
-          </button>
+          {onReply && (
+            <button
+              type="button"
+              onClick={onReply}
+              title="Répondre"
+              className="text-muted opacity-0 transition-opacity hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+            >
+              <CornerUpLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="sr-only">Répondre</span>
+            </button>
+          )}
         </div>
-        <div className={`min-w-0 max-w-full rounded-2xl px-4 py-2.5 ${bubble}`}>
+        <div
+          className={`min-w-0 max-w-full rounded-2xl px-4 py-2.5 ${bubble} ${
+            state === "sending"
+              ? "opacity-85"
+              : state === "failed"
+                ? "outline outline-1 outline-danger"
+                : ""
+          }`}
+        >
           {message.replyTo && (
             <p className="mb-2 border-l-2 border-current/40 pl-2 text-sm opacity-80">
               <strong>{authorName(message.replyTo.author)}</strong> :{" "}
@@ -488,8 +604,49 @@ function MessageItem({
               ))}
             </ul>
           )}
+          {state && <StatusMark status={state} />}
         </div>
+        {state === "failed" && (
+          <div className="mt-1 flex gap-3 text-xs">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center gap-1 text-accent hover:underline"
+            >
+              <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
+              Réessayer
+            </button>
+            <button
+              type="button"
+              onClick={onDiscard}
+              className="inline-flex items-center gap-1 text-muted hover:text-foreground"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              Supprimer
+            </button>
+          </div>
+        )}
       </div>
     </article>
+  );
+}
+
+/** L'état d'un message envoyé, en bas à droite de la bulle, comme sur WhatsApp. */
+function StatusMark({ status }: { status: Status }) {
+  if (status === "failed") {
+    return (
+      <span className="mt-1 flex items-center justify-end gap-1 text-xs text-danger">
+        <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
+        Non envoyé
+      </span>
+    );
+  }
+  const Icon = status === "sending" ? Clock : Check;
+  const label = status === "sending" ? "Envoi…" : "Envoyé";
+  return (
+    <span className="mt-1 flex justify-end opacity-75" title={label}>
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      <span className="sr-only">{label}</span>
+    </span>
   );
 }
