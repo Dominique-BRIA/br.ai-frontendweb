@@ -27,13 +27,19 @@ async function relay(
     { method: request.method, body: body || undefined },
   ).catch(() => null);
   if (!response) return unreachable();
-  return new Response(response.body, {
-    status: response.status,
-    headers: {
-      "Content-Type":
-        response.headers.get("Content-Type") ?? "application/json",
-    },
+  // Les pièces jointes gardent leur nom et leurs protections en passant par le relais.
+  const headers = new Headers({
+    "Content-Type": response.headers.get("Content-Type") ?? "application/json",
   });
+  for (const name of [
+    "Content-Disposition",
+    "Cache-Control",
+    "X-Content-Type-Options",
+  ]) {
+    const value = response.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  return new Response(response.body, { status: response.status, headers });
 }
 
 export {
