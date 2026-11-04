@@ -72,7 +72,7 @@ export type LiveEvent =
   | { type: "message.created"; message: Message }
   | { type: "memory.changed"; projectId: string }
   | { type: "workspace.changed" }
-  | { type: "order.updated" }
+  | { type: "order.updated"; order: Order }
   | { type: "presence.changed"; userId: string; online: boolean }
   | { type: string };
 
@@ -87,3 +87,41 @@ export const authorName = (author: Author) =>
 
 export const isAgent = (author: Author) =>
   author.kind === "serveur" || author.kind === "cuisinier";
+
+export interface Order {
+  id: string;
+  projectId: string;
+  number: number;
+  title: string;
+  brief: string;
+  status: "pending" | "running" | "done" | "failed" | "stopped";
+  requestedBy: Author;
+  machine: { userId: string; displayName: string } | null;
+  summary: string | null;
+  branch: string | null;
+  commit: string | null;
+  pushed: boolean;
+  pullRequest: { number: number; url: string } | null;
+  merged: boolean;
+  handoffNote: string | null;
+  steps: {
+    at: string;
+    kind: "info" | "read" | "write" | "command" | "error";
+    text: string;
+  }[];
+  createdAt: string;
+}
+
+export interface TeamUsage {
+  plan: {
+    id: string;
+    name: string;
+    maxMembers: number;
+    maxProjects: number;
+    monthlyCredits: number;
+  };
+  used: number;
+  bonus: number;
+  quota: number;
+  byMember: { userId: string; displayName: string; credits: number }[];
+}

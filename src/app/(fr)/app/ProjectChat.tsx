@@ -1,20 +1,20 @@
 "use client";
 
 import {
-  ArrowLeft,
   Check,
   CircleAlert,
   Clock,
   CornerUpLeft,
   Lightbulb,
+  ListChecks,
   LoaderCircle,
+  PanelRight,
   Paperclip,
   RotateCw,
   Send,
   Trash2,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   type FormEvent,
@@ -25,7 +25,9 @@ import {
   useState,
 } from "react";
 import { useApp } from "./AppShell";
+import { BackLink } from "./BackLink";
 import { Markdown } from "./Markdown";
+import { OrdersPanel } from "./OrdersPanel";
 import {
   type Author,
   authorName,
@@ -94,6 +96,8 @@ export function ProjectChat() {
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [outgoing, setOutgoing] = useState<Outgoing[]>([]);
+  const [panel, setPanel] = useState<"memory" | "orders">("memory");
+  const [panelOpen, setPanelOpen] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const myUserId = workspace?.user.id ?? "";
   const atBottom = useRef(true);
@@ -303,20 +307,23 @@ export function ProjectChat() {
     <div className="relative flex h-full min-h-0">
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
-          <Link
-            href="/app"
-            className="text-muted hover:text-foreground lg:hidden"
-            title="Retour aux projets"
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </Link>
-          <div className="min-w-0">
+          <BackLink />
+          <div className="min-w-0 flex-1">
             <h1 className="truncate font-semibold">{project?.name ?? "…"}</h1>
             <p className="truncate text-xs text-muted">
               {team?.name}
               {!live && " · reconnexion…"}
             </p>
           </div>
+          {/* Sur un écran étroit, la mémoire et les commandes s'ouvrent par-dessus le fil. */}
+          <button
+            type="button"
+            onClick={() => setPanelOpen(true)}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-2.5 text-sm text-muted ring-1 ring-border hover:text-foreground xl:hidden"
+          >
+            <PanelRight className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Mémoire et commandes</span>
+          </button>
         </div>
 
         <div
@@ -463,40 +470,82 @@ export function ProjectChat() {
       </section>
 
       <aside
-        className="hidden w-72 shrink-0 overflow-y-auto border-l border-border p-4 xl:block"
-        aria-label="Mémoire du projet"
+        className={`${panelOpen ? "fixed inset-0 z-30 block" : "hidden"} overflow-y-auto bg-background p-4 xl:static xl:z-auto xl:block xl:w-80 xl:shrink-0 xl:border-l xl:border-border`}
+        aria-label="Mémoire et commandes du projet"
       >
-        <h2 className="flex items-center gap-2 font-semibold">
-          <Lightbulb className="h-4 w-4 text-accent" aria-hidden="true" />
-          Mémoire du projet
-        </h2>
-        {open.length === 0 && (
-          <p className="mt-3 text-sm text-muted">
-            Les décisions, questions et tâches notées par le serveur
-            apparaîtront ici.
-          </p>
-        )}
-        {(Object.keys(MEMORY_TITLES) as MemoryItem["type"][]).map((type) => {
-          const items = open.filter((item) => item.type === type);
-          if (items.length === 0) return null;
-          return (
-            <div key={type} className="mt-5">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-                {MEMORY_TITLES[type]}
-              </h3>
-              <ul className="mt-2 flex flex-col gap-2">
-                {items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="rounded-xl bg-card p-3 text-sm ring-1 ring-border"
-                  >
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
+        <div className="flex items-center gap-1">
+          {(
+            [
+              ["memory", "Mémoire", Lightbulb],
+              ["orders", "Commandes", ListChecks],
+            ] as const
+          ).map(([key, label, Icon]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setPanel(key)}
+              aria-pressed={panel === key}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold ${
+                panel === key
+                  ? "bg-accent-soft text-foreground"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPanelOpen(false)}
+            title="Fermer"
+            className="ml-auto text-muted hover:text-foreground xl:hidden"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+            <span className="sr-only">Fermer</span>
+          </button>
+        </div>
+        <div className="mt-4">
+          {panel === "orders" ? (
+            <OrdersPanel
+              projectId={projectId}
+              myUserId={myUserId}
+              isChef={team?.myRole === "chef"}
+            />
+          ) : (
+            <>
+              {open.length === 0 && (
+                <p className="mt-3 text-sm text-muted">
+                  Les décisions, questions et tâches notées par le serveur
+                  apparaîtront ici.
+                </p>
+              )}
+              {(Object.keys(MEMORY_TITLES) as MemoryItem["type"][]).map(
+                (type) => {
+                  const items = open.filter((item) => item.type === type);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={type} className="mt-5">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        {MEMORY_TITLES[type]}
+                      </h3>
+                      <ul className="mt-2 flex flex-col gap-2">
+                        {items.map((item) => (
+                          <li
+                            key={item.id}
+                            className="rounded-xl bg-card p-3 text-sm ring-1 ring-border"
+                          >
+                            {item.text}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                },
+              )}
+            </>
+          )}
+        </div>
       </aside>
     </div>
   );

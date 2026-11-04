@@ -38,6 +38,8 @@ interface AppContextValue {
     init?: { method?: string; body?: unknown },
   ) => Promise<T>;
   subscribe: (listener: (event: LiveEvent) => void) => () => void;
+  /** Recharge les équipes et les projets après une action. */
+  reload: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -178,7 +180,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ workspace, live, api, subscribe }}>
+    <AppContext.Provider
+      value={{ workspace, live, api, subscribe, reload: loadWorkspace }}
+    >
       <div className="flex h-dvh flex-col overflow-hidden">
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
           <Link href="/app" className="flex items-center gap-2">
@@ -240,10 +244,14 @@ function ProjectList({ workspace }: { workspace: Workspace | null }) {
     >
       {workspace?.teams.map((team) => (
         <div key={team.id} className="mb-5">
-          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+          <Link
+            href={`/app/t/${team.id}`}
+            aria-current={pathname === `/app/t/${team.id}` ? "page" : undefined}
+            className="mb-1 flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted hover:text-foreground"
+          >
             <Users className="h-3.5 w-3.5" aria-hidden="true" />
             {team.name}
-          </p>
+          </Link>
           <ul>
             {team.projects.map((project) => {
               const href = `/app/p/${project.id}`;
