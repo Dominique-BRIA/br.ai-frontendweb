@@ -7,8 +7,11 @@ import {
   ExternalLink,
   GitBranch,
   GitMerge,
+  Plus,
+  X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { fieldClass, primaryButtonClass } from "./AppHome";
 import { useApp } from "./AppShell";
 import { Markdown } from "./Markdown";
 import { authorName, type Order } from "./types";
@@ -49,6 +52,41 @@ export function OrdersPanel({
     null,
   );
   const [busy, setBusy] = useState<string | null>(null);
+  const [composing, setComposing] = useState(false);
+  const [title, setTitle] = useState("");
+  const [brief, setBrief] = useState("");
+
+  const create = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!title.trim() || !brief.trim()) return;
+    setBusy("new");
+    setNotice(null);
+    try {
+      const { order } = await api<{ order: Order }>(
+        `projects/${projectId}/orders`,
+        {
+          method: "POST",
+          body: { title: title.trim(), brief: brief.trim() },
+        },
+      );
+      setOrders((current) =>
+        current.some((item) => item.id === order.id)
+          ? current
+          : [order, ...current],
+      );
+      setTitle("");
+      setBrief("");
+      setComposing(false);
+      setNotice({
+        ok: true,
+        text: `Commande n° ${order.number} passée au cuisinier.`,
+      });
+    } catch (cause) {
+      setNotice({ ok: false, text: (cause as Error).message });
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -130,12 +168,62 @@ export function OrdersPanel({
 
   return (
     <div>
-      <p className="text-sm text-muted">
-        Pour passer commande, demandez-le à{" "}
-        <strong className="text-foreground">@bria</strong> dans le chat. Le
-        cuisinier travaille sur la machine d'un membre qui a ouvert le projet
-        dans VS Code.
-      </p>
+      {composing ? (
+        <form
+          onSubmit={create}
+          className="flex flex-col gap-2 rounded-xl bg-card p-3 ring-1 ring-border"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold">Nouvelle commande</span>
+            <button
+              type="button"
+              onClick={() => setComposing(false)}
+              title="Annuler"
+              className="text-muted hover:text-foreground"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">Annuler</span>
+            </button>
+          </div>
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Titre, par exemple : Page de contact"
+            aria-label="Titre de la commande"
+            maxLength={120}
+            className={fieldClass}
+          />
+          <textarea
+            value={brief}
+            onChange={(event) => setBrief(event.target.value)}
+            placeholder="Ce que le cuisinier doit faire, avec les détails utiles"
+            aria-label="Ce que le cuisinier doit faire"
+            rows={5}
+            maxLength={6000}
+            className="resize-y rounded-xl border border-border bg-field px-4 py-3 text-base outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
+          />
+          <button
+            type="submit"
+            disabled={!title.trim() || !brief.trim() || busy !== null}
+            className={primaryButtonClass}
+          >
+            Passer la commande
+          </button>
+          <p className="text-xs text-muted">
+            Le cuisinier travaille sur la machine d'un membre qui a ouvert le
+            projet dans VS Code.
+          </p>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setComposing(true)}
+          className={`${primaryButtonClass} w-full`}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Nouvelle commande
+        </button>
+      )}
       {notice && (
         <p
           role={notice.ok ? "status" : "alert"}
