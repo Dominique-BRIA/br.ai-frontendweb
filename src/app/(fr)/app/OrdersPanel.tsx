@@ -7,6 +7,7 @@ import {
   ExternalLink,
   GitBranch,
   GitMerge,
+  MessageSquarePlus,
   Plus,
   X,
 } from "lucide-react";
@@ -56,6 +57,8 @@ export function OrdersPanel({
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+  const [following, setFollowing] = useState<string | null>(null);
+  const [followUp, setFollowUp] = useState("");
   const [title, setTitle] = useState("");
   const [brief, setBrief] = useState("");
   const [cloud, setCloud] = useState(false);
@@ -135,6 +138,26 @@ export function OrdersPanel({
       }),
     [subscribe, projectId],
   );
+
+  const sendFollowUp = async (order: Order) => {
+    if (!followUp.trim()) return;
+    setBusy(order.id);
+    setNotice(null);
+    try {
+      await api(`orders/${order.id}/follow-up`, {
+        method: "POST",
+        body: { brief: followUp.trim() },
+      });
+      setFollowing(null);
+      setFollowUp("");
+      setNotice({ ok: true, text: `La commande n° ${order.number} continue.` });
+      await load();
+    } catch (cause) {
+      setNotice({ ok: false, text: (cause as Error).message });
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const mine = (order: Order) =>
     isChef ||
@@ -337,6 +360,22 @@ export function OrdersPanel({
                     Valider et fusionner
                   </button>
                 )}
+                {!order.merged && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFollowing(following === order.id ? null : order.id);
+                      setFollowUp("");
+                    }}
+                    className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
+                  >
+                    <MessageSquarePlus
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    />
+                    Demander une suite
+                  </button>
+                )}
                 {canStop && (
                   <button
                     type="button"
@@ -362,6 +401,27 @@ export function OrdersPanel({
                   Détails
                 </button>
               </div>
+              {following === order.id && (
+                <div className="mt-3 flex flex-col gap-2">
+                  <textarea
+                    value={followUp}
+                    onChange={(event) => setFollowUp(event.target.value)}
+                    placeholder="Ce qu'il faut ajouter ou corriger sur cette commande"
+                    aria-label="Suite de la commande"
+                    rows={3}
+                    maxLength={6000}
+                    className="resize-y rounded-xl border border-border bg-field px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  />
+                  <button
+                    type="button"
+                    disabled={!followUp.trim() || busy !== null}
+                    onClick={() => void sendFollowUp(order)}
+                    className={primaryButtonClass}
+                  >
+                    Envoyer
+                  </button>
+                </div>
+              )}
               {expanded && (
                 <div className="mt-3 border-t border-border pt-3">
                   <p className="text-muted">{order.brief}</p>
