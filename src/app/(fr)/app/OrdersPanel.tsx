@@ -55,6 +55,8 @@ export function OrdersPanel({
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState("");
   const [brief, setBrief] = useState("");
+  const [cloud, setCloud] = useState(false);
+  const [cloudAvailable, setCloudAvailable] = useState(false);
 
   const create = async (event: FormEvent) => {
     event.preventDefault();
@@ -66,7 +68,11 @@ export function OrdersPanel({
         `projects/${projectId}/orders`,
         {
           method: "POST",
-          body: { title: title.trim(), brief: brief.trim() },
+          body: {
+            title: title.trim(),
+            brief: brief.trim(),
+            runOn: cloud ? "cloud" : "member",
+          },
         },
       );
       setOrders((current) =>
@@ -76,6 +82,7 @@ export function OrdersPanel({
       );
       setTitle("");
       setBrief("");
+      setCloud(false);
       setComposing(false);
       setNotice({
         ok: true,
@@ -100,7 +107,10 @@ export function OrdersPanel({
 
   useEffect(() => {
     void load();
-  }, [load]);
+    void api<{ available: boolean }>("cloud")
+      .then((answer) => setCloudAvailable(answer.available))
+      .catch(() => setCloudAvailable(false));
+  }, [load, api]);
 
   useEffect(
     () =>
@@ -209,9 +219,28 @@ export function OrdersPanel({
           >
             Passer la commande
           </button>
+          {cloudAvailable && (
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={cloud}
+                onChange={(event) => setCloud(event.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Exécuter sur la machine cloud de &lt;br/&gt;
+                <span className="block text-xs text-muted">
+                  Pour une commande non sensible : le code et le contenu de la
+                  commande quittent vos machines. Sans secrets, 20 minutes au
+                  plus.
+                </span>
+              </span>
+            </label>
+          )}
           <p className="text-xs text-muted">
-            Le cuisinier travaille sur la machine d'un membre qui a ouvert le
-            projet dans VS Code.
+            {cloud
+              ? "Elle démarre dès que la machine cloud est libre. Un projet avec un dépôt a besoin de l'application GitHub."
+              : "Le cuisinier travaille sur la machine d'un membre qui a ouvert le projet dans VS Code."}
           </p>
         </form>
       ) : (
@@ -265,7 +294,10 @@ export function OrdersPanel({
               </div>
               <p className="mt-1 text-xs text-muted">
                 {authorName(order.requestedBy)} · {time(order.createdAt)}
-                {order.machine && ` · machine de ${order.machine.displayName}`}
+                {order.runOn === "cloud"
+                  ? " · machine cloud"
+                  : order.machine &&
+                    ` · machine de ${order.machine.displayName}`}
               </p>
               {order.branch && (
                 <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">

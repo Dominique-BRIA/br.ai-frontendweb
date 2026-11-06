@@ -104,6 +104,7 @@ export interface Order {
   pullRequest: { number: number; url: string } | null;
   merged: boolean;
   handoffNote: string | null;
+  runOn: "member" | "cloud";
   steps: {
     at: string;
     kind: "info" | "read" | "write" | "command" | "error";

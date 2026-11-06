@@ -26,6 +26,7 @@ import { ThemeToggle } from "@/app/ThemeToggle";
 import { AdminsSection } from "./admins";
 import { api, SignedOut } from "./api";
 import { BetaRequestsSection } from "./beta";
+import { CloudMachinesCard } from "./cloud";
 import { JournalSection } from "./journal";
 import { MaintenanceSection } from "./maintenance";
 import { initials, levelOf, type Me } from "./permissions";
@@ -333,7 +334,10 @@ export function Dashboard() {
                 />
               )}
               {shown === "reglages" && (
-                <SettingsSection onSignedOut={signedOut} />
+                <>
+                  <SettingsSection onSignedOut={signedOut} />
+                  <CloudMachinesCard onSignedOut={signedOut} />
+                </>
               )}
               {shown === "profil" && me && (
                 <ProfileSection me={me} onSaved={loadMe} />
