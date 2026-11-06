@@ -17,6 +17,7 @@ export interface Project {
   id: string;
   teamId: string;
   name: string;
+  repo: { fullName: string; defaultBranch: string } | null;
 }
 
 export interface Team {

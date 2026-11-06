@@ -508,6 +508,7 @@ export function ProjectChat() {
         <div className="mt-4">
           {panel === "orders" ? (
             <OrdersPanel
+              hasRepo={Boolean(project?.repo)}
               projectId={projectId}
               myUserId={myUserId}
               isChef={team?.myRole === "chef"}

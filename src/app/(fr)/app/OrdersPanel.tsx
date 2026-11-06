@@ -40,10 +40,13 @@ export function OrdersPanel({
   projectId,
   myUserId,
   isChef,
+  hasRepo,
 }: {
   projectId: string;
   myUserId: string;
   isChef: boolean;
+  /** Un dépôt GitHub est branché : le travail reste alors sur les machines, sauf choix contraire. */
+  hasRepo: boolean;
 }) {
   const { api, subscribe } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -82,7 +85,7 @@ export function OrdersPanel({
       );
       setTitle("");
       setBrief("");
-      setCloud(false);
+      setCloud(cloudAvailable && !hasRepo);
       setComposing(false);
       setNotice({
         ok: true,
@@ -108,9 +111,13 @@ export function OrdersPanel({
   useEffect(() => {
     void load();
     void api<{ available: boolean }>("cloud")
-      .then((answer) => setCloudAvailable(answer.available))
+      .then((answer) => {
+        setCloudAvailable(answer.available);
+        // Sans dépôt, l'espace du projet est sur la machine cloud : c'est le choix par défaut.
+        if (answer.available && !hasRepo) setCloud(true);
+      })
       .catch(() => setCloudAvailable(false));
-  }, [load, api]);
+  }, [load, api, hasRepo]);
 
   useEffect(
     () =>
@@ -230,16 +237,16 @@ export function OrdersPanel({
               <span>
                 Exécuter sur la machine cloud de &lt;br/&gt;
                 <span className="block text-xs text-muted">
-                  Pour une commande non sensible : le code et le contenu de la
-                  commande quittent vos machines. Sans secrets, 20 minutes au
-                  plus.
+                  Pour une commande non sensible, sans ordinateur allumé : le
+                  travail reste dans l'espace du projet, et le résultat arrive
+                  en .zip à télécharger. 20 minutes au plus.
                 </span>
               </span>
             </label>
           )}
           <p className="text-xs text-muted">
             {cloud
-              ? "Elle démarre dès que la machine cloud est libre. Un projet avec un dépôt a besoin de l'application GitHub."
+              ? "Elle démarre dès que la machine cloud est libre."
               : "Le cuisinier travaille sur la machine d'un membre qui a ouvert le projet dans VS Code."}
           </p>
         </form>
