@@ -33,6 +33,95 @@ const time = (iso: string) =>
     minute: "2-digit",
   }).format(new Date(iso));
 
+/** Les commandes d'un projet, tenues à jour en direct. */
+export function useProjectOrders(projectId: string) {
+  const { api, subscribe } = useApp();
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      setOrders(
+        (await api<{ orders: Order[] }>(`projects/${projectId}/orders`)).orders,
+      );
+    } catch {
+      // La liste reste telle quelle.
+    }
+  }, [api, projectId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(
+    () =>
+      subscribe((event) => {
+        if (event.type !== "order.updated" || !("order" in event)) return;
+        const updated = event.order;
+        if (updated.projectId !== projectId) return;
+        setOrders((current) =>
+          current.some((order) => order.id === updated.id)
+            ? current.map((order) =>
+                order.id === updated.id ? updated : order,
+              )
+            : [updated, ...current],
+        );
+      }),
+    [subscribe, projectId],
+  );
+
+  return { orders, setOrders, load };
+}
+
+function OrderSteps({ steps }: { steps: Order["steps"] }) {
+  return (
+    <ol className="mt-3 flex flex-col gap-1 text-xs text-muted">
+      {[...steps].reverse().map((step) => (
+        <li
+          key={`${step.at}-${step.text}`}
+          className={step.kind === "error" ? "text-danger" : ""}
+        >
+          {time(step.at)} · {step.text}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Sous le message du cuisinier : ce qu'il est en train de faire, comme dans l'onglet Commandes. */
+export function OrderDetails({ order }: { order: Order }) {
+  const [open, setOpen] = useState(false);
+  const status = STATUS[order.status];
+  return (
+    <div className="mt-1 max-w-full text-xs">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
+        >
+          {open ? (
+            <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+          Détails
+        </button>
+        <span
+          className={`rounded-full px-2 py-0.5 font-semibold ${status.className}`}
+        >
+          {status.label}
+        </span>
+      </div>
+      {open && (
+        <div className="mt-1 max-h-72 overflow-y-auto rounded-xl bg-card px-3 pb-3 ring-1 ring-border">
+          <OrderSteps steps={order.steps} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * Les commandes du projet : leur état en direct, leurs étapes, et les actions possibles depuis le
  * web. Le travail lui-même se fait toujours sur la machine d'un membre.
@@ -49,8 +138,8 @@ export function OrdersPanel({
   /** Un dépôt GitHub est branché : le travail reste alors sur les machines, sauf choix contraire. */
   hasRepo: boolean;
 }) {
-  const { api, subscribe } = useApp();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { api } = useApp();
+  const { orders, setOrders, load } = useProjectOrders(projectId);
   const [open, setOpen] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
     null,
@@ -101,18 +190,7 @@ export function OrdersPanel({
     }
   };
 
-  const load = useCallback(async () => {
-    try {
-      setOrders(
-        (await api<{ orders: Order[] }>(`projects/${projectId}/orders`)).orders,
-      );
-    } catch {
-      // La liste reste telle quelle.
-    }
-  }, [api, projectId]);
-
   useEffect(() => {
-    void load();
     void api<{ available: boolean }>("cloud")
       .then((answer) => {
         setCloudAvailable(answer.available);
@@ -120,24 +198,7 @@ export function OrdersPanel({
         if (answer.available && !hasRepo) setCloud(true);
       })
       .catch(() => setCloudAvailable(false));
-  }, [load, api, hasRepo]);
-
-  useEffect(
-    () =>
-      subscribe((event) => {
-        if (event.type !== "order.updated" || !("order" in event)) return;
-        const updated = event.order;
-        if (updated.projectId !== projectId) return;
-        setOrders((current) =>
-          current.some((order) => order.id === updated.id)
-            ? current.map((order) =>
-                order.id === updated.id ? updated : order,
-              )
-            : [updated, ...current],
-        );
-      }),
-    [subscribe, projectId],
-  );
+  }, [api, hasRepo]);
 
   const sendFollowUp = async (order: Order) => {
     if (!followUp.trim()) return;
@@ -438,16 +499,7 @@ export function OrdersPanel({
                       <Markdown text={order.handoffNote} />
                     </div>
                   )}
-                  <ol className="mt-3 flex flex-col gap-1 text-xs text-muted">
-                    {[...order.steps].reverse().map((step) => (
-                      <li
-                        key={`${step.at}-${step.text}`}
-                        className={step.kind === "error" ? "text-danger" : ""}
-                      >
-                        {time(step.at)} · {step.text}
-                      </li>
-                    ))}
-                  </ol>
+                  <OrderSteps steps={order.steps} />
                 </div>
               )}
             </li>

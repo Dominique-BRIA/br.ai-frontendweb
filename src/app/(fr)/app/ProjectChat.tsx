@@ -5,6 +5,7 @@ import {
   CircleAlert,
   Clock,
   CornerUpLeft,
+  FolderOpen,
   Lightbulb,
   ListChecks,
   LoaderCircle,
@@ -26,14 +27,16 @@ import {
 } from "react";
 import { useApp } from "./AppShell";
 import { BackLink } from "./BackLink";
+import { FilesPanel } from "./FilesPanel";
 import { Markdown } from "./Markdown";
-import { OrdersPanel } from "./OrdersPanel";
+import { OrderDetails, OrdersPanel, useProjectOrders } from "./OrdersPanel";
 import {
   type Author,
   authorName,
   isAgent,
   type MemoryItem,
   type Message,
+  type Order,
 } from "./types";
 
 const PAGE = 50;
@@ -96,7 +99,8 @@ export function ProjectChat() {
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [outgoing, setOutgoing] = useState<Outgoing[]>([]);
-  const [panel, setPanel] = useState<"memory" | "orders">("memory");
+  const [panel, setPanel] = useState<"memory" | "orders" | "files">("memory");
+  const { orders } = useProjectOrders(projectId);
   const [panelOpen, setPanelOpen] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const myUserId = workspace?.user.id ?? "";
@@ -365,6 +369,7 @@ export function ProjectChat() {
                   </p>
                 )}
                 <MessageItem
+                  orders={orders}
                   message={message}
                   myUserId={myUserId}
                   onReply={() => setReplyTo(message)}
@@ -374,6 +379,7 @@ export function ProjectChat() {
           })}
           {outgoing.map((item) => (
             <MessageItem
+              orders={orders}
               key={item.clientId}
               message={{
                 id: item.clientId,
@@ -471,13 +477,14 @@ export function ProjectChat() {
 
       <aside
         className={`${panelOpen ? "fixed inset-0 z-30 block" : "hidden"} overflow-y-auto bg-background p-4 xl:static xl:z-auto xl:block xl:w-80 xl:shrink-0 xl:border-l xl:border-border`}
-        aria-label="Mémoire et commandes du projet"
+        aria-label="Mémoire, commandes et fichiers du projet"
       >
         <div className="flex items-center gap-1">
           {(
             [
               ["memory", "Mémoire", Lightbulb],
               ["orders", "Commandes", ListChecks],
+              ["files", "Fichiers", FolderOpen],
             ] as const
           ).map(([key, label, Icon]) => (
             <button
@@ -506,7 +513,9 @@ export function ProjectChat() {
           </button>
         </div>
         <div className="mt-4">
-          {panel === "orders" ? (
+          {panel === "files" ? (
+            <FilesPanel projectId={projectId} />
+          ) : panel === "orders" ? (
             <OrdersPanel
               hasRepo={Boolean(project?.repo)}
               projectId={projectId}
@@ -557,6 +566,7 @@ export function ProjectChat() {
  * ceux des collègues, émeraude très sombre pour les IA.
  */
 function MessageItem({
+  orders,
   message,
   myUserId,
   status,
@@ -564,6 +574,7 @@ function MessageItem({
   onRetry,
   onDiscard,
 }: {
+  orders?: Order[];
   message: Message;
   myUserId: string;
   /** Pour un message en route : l'horloge, ou l'échec avec Réessayer. */
@@ -576,6 +587,16 @@ function MessageItem({
     message.author.kind === "member" && message.author.userId === myUserId;
   const agent = isAgent(message.author);
   const mentionsMe = message.mentions.includes(myUserId);
+  // Le message où le cuisinier prend la commande : ses étapes sont consultables juste dessous.
+  const taken =
+    message.author.kind === "cuisinier"
+      ? /^Je (?:commence|reprends) la \*\*commande n° (\d+)\*\*/.exec(
+          message.body,
+        )
+      : null;
+  const takenOrder = taken
+    ? orders?.find((order) => order.number === Number(taken[1]))
+    : undefined;
   const state: Status | null = mine ? (status ?? "sent") : null;
   const bubble = mine
     ? "bg-msg-sent text-msg-on-sent border-transparent"
@@ -656,6 +677,7 @@ function MessageItem({
           )}
           {state && <StatusMark status={state} />}
         </div>
+        {takenOrder && <OrderDetails order={takenOrder} />}
         {state === "failed" && (
           <div className="mt-1 flex gap-3 text-xs">
             <button
