@@ -66,6 +66,10 @@ const MAX_FILES = 10;
 const ACCEPTED =
   ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.odp,.ods,.txt,.md,.csv,.json,.html,.png,.jpg,.jpeg,.gif,.webp,.zip";
 
+/** Distance du glissement qui déclenche la réponse, et distance au-delà de laquelle le message ne suit plus. */
+const SWIPE_TRIGGER = 64;
+const SWIPE_MAX = 88;
+
 interface Outgoing {
   attachments: Message["attachments"];
   clientId: string;
@@ -105,6 +109,10 @@ export function ProjectChat() {
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (replyTo) input.current?.focus();
+  }, [replyTo]);
   const [outgoing, setOutgoing] = useState<Outgoing[]>([]);
   const [pending, setPending] = useState<Message["attachments"]>([]);
   const [uploading, setUploading] = useState(false);
@@ -398,7 +406,7 @@ export function ProjectChat() {
               element.scrollHeight - element.scrollTop - element.clientHeight <
               80;
           }}
-          className="relative min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
+          className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6"
         >
           {hasMore && (
             <div className="mb-4 text-center">
@@ -562,6 +570,7 @@ export function ProjectChat() {
               <span className="sr-only">Joindre un document</span>
             </button>
             <textarea
+              ref={input}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={onKeyDown}
@@ -720,102 +729,163 @@ function MessageItem({
       ? `bg-msg-ai ${mentionsMe ? "border-2 border-msg-ai-text" : "border border-msg-ai-border"}`
       : `bg-msg-received border ${mentionsMe ? "border-warm" : "border-msg-received-border"}`;
 
+  // Glisser vers la droite au doigt : le message suit, et répond une fois le seuil passé.
+  const [shift, setShift] = useState(0);
+  const swipe = useRef<{
+    x: number;
+    y: number;
+    horizontal: boolean | null;
+  } | null>(null);
+  const endSwipe = (reply: boolean) => {
+    if (reply && swipe.current?.horizontal && shift >= SWIPE_TRIGGER) {
+      if ("vibrate" in navigator) navigator.vibrate(15);
+      onReply?.();
+    }
+    swipe.current = null;
+    setShift(0);
+  };
+
   return (
-    <article className={`group mb-3 flex gap-3 ${mine ? "justify-end" : ""}`}>
-      {!mine && (
+    <div className="relative">
+      {shift > 0 && (
         <span
-          className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-            agent
-              ? "border border-msg-ai-border bg-msg-ai text-msg-ai-text"
-              : "bg-card ring-1 ring-border"
-          }`}
+          className="absolute left-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-card text-accent ring-1 ring-border"
+          style={{ opacity: Math.min(1, shift / SWIPE_TRIGGER) }}
           aria-hidden="true"
         >
-          {initials(message.author)}
+          <CornerUpLeft className="h-4 w-4" />
         </span>
       )}
-      <div
-        className={`flex min-w-0 max-w-[85%] flex-col ${mine ? "items-end" : "items-start"}`}
+      <article
+        className={`group mb-3 flex touch-pan-y gap-3 ${mine ? "justify-end" : ""}`}
+        style={{
+          transform: shift > 0 ? `translateX(${shift}px)` : undefined,
+          transition: shift > 0 ? "none" : "transform 150ms ease-out",
+        }}
+        onTouchStart={(event) => {
+          const touch = event.touches[0];
+          if (!onReply || !touch || event.touches.length > 1) return;
+          swipe.current = {
+            x: touch.clientX,
+            y: touch.clientY,
+            horizontal: null,
+          };
+        }}
+        onTouchMove={(event) => {
+          const current = swipe.current;
+          const touch = event.touches[0];
+          if (!current || !touch) return;
+          const dx = touch.clientX - current.x;
+          const dy = touch.clientY - current.y;
+          if (current.horizontal === null) {
+            if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+            // Un geste plutôt vertical reste un défilement du fil.
+            current.horizontal = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.5;
+            if (!current.horizontal) {
+              swipe.current = null;
+              return;
+            }
+          }
+          setShift(Math.min(SWIPE_MAX, Math.max(0, dx)));
+        }}
+        onTouchEnd={() => endSwipe(true)}
+        onTouchCancel={() => endSwipe(false)}
       >
-        <div className="mb-1 flex items-center gap-2 text-xs">
-          {!mine && (
-            <span
-              className={`font-semibold ${agent ? "text-msg-ai-text" : ""}`}
-            >
-              {authorName(message.author)}
-            </span>
-          )}
-          <time className="text-muted" dateTime={message.createdAt}>
-            {time(message.createdAt)}
-          </time>
-          {onReply && (
-            <button
-              type="button"
-              onClick={onReply}
-              title="Répondre"
-              className="text-muted opacity-0 transition-opacity hover:text-foreground focus:opacity-100 group-hover:opacity-100"
-            >
-              <CornerUpLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="sr-only">Répondre</span>
-            </button>
-          )}
-        </div>
-        <div
-          className={`min-w-0 max-w-full rounded-2xl px-4 py-2.5 ${bubble} ${
-            state === "sending"
-              ? "opacity-85"
-              : state === "failed"
-                ? "outline outline-1 outline-danger"
-                : ""
-          }`}
-        >
-          {message.replyTo && (
-            <p className="mb-2 border-l-2 border-current/40 pl-2 text-sm opacity-80">
-              <strong>{authorName(message.replyTo.author)}</strong> :{" "}
-              {message.replyTo.excerpt}
-            </p>
-          )}
-          {message.body && <Markdown text={message.body} />}
-          {message.attachments.length > 0 && (
-            <ul className="mt-2 flex flex-col gap-1">
-              {message.attachments.map((file) => (
-                <li key={file.id}>
-                  <a
-                    href={`/api/app/attachments/${file.id}`}
-                    className="inline-flex items-center gap-1.5 text-sm underline underline-offset-2"
-                  >
-                    <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
-                    {file.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-          {state && <StatusMark status={state} />}
-        </div>
-        {takenOrder && <OrderDetails order={takenOrder} />}
-        {state === "failed" && (
-          <div className="mt-1 flex gap-3 text-xs">
-            <button
-              type="button"
-              onClick={onRetry}
-              className="inline-flex items-center gap-1 text-accent hover:underline"
-            >
-              <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
-              Réessayer
-            </button>
-            <button
-              type="button"
-              onClick={onDiscard}
-              className="inline-flex items-center gap-1 text-muted hover:text-foreground"
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Supprimer
-            </button>
-          </div>
+        {!mine && (
+          <span
+            className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+              agent
+                ? "border border-msg-ai-border bg-msg-ai text-msg-ai-text"
+                : "bg-card ring-1 ring-border"
+            }`}
+            aria-hidden="true"
+          >
+            {initials(message.author)}
+          </span>
         )}
-      </div>
-    </article>
+        <div
+          className={`flex min-w-0 max-w-[85%] flex-col ${mine ? "items-end" : "items-start"}`}
+        >
+          <div className="mb-1 flex items-center gap-2 text-xs">
+            {!mine && (
+              <span
+                className={`font-semibold ${agent ? "text-msg-ai-text" : ""}`}
+              >
+                {authorName(message.author)}
+              </span>
+            )}
+            <time className="text-muted" dateTime={message.createdAt}>
+              {time(message.createdAt)}
+            </time>
+            {onReply && (
+              <button
+                type="button"
+                onClick={onReply}
+                title="Répondre"
+                className="text-muted opacity-0 transition-opacity hover:text-foreground focus:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+              >
+                <CornerUpLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="sr-only">Répondre</span>
+              </button>
+            )}
+          </div>
+          <div
+            className={`min-w-0 max-w-full rounded-2xl px-4 py-2.5 ${bubble} ${
+              state === "sending"
+                ? "opacity-85"
+                : state === "failed"
+                  ? "outline outline-1 outline-danger"
+                  : ""
+            }`}
+          >
+            {message.replyTo && (
+              <p className="mb-2 border-l-2 border-current/40 pl-2 text-sm opacity-80">
+                <strong>{authorName(message.replyTo.author)}</strong> :{" "}
+                {message.replyTo.excerpt}
+              </p>
+            )}
+            {message.body && <Markdown text={message.body} />}
+            {message.attachments.length > 0 && (
+              <ul className="mt-2 flex flex-col gap-1">
+                {message.attachments.map((file) => (
+                  <li key={file.id}>
+                    <a
+                      href={`/api/app/attachments/${file.id}`}
+                      className="inline-flex items-center gap-1.5 text-sm underline underline-offset-2"
+                    >
+                      <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
+                      {file.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {state && <StatusMark status={state} />}
+          </div>
+          {takenOrder && <OrderDetails order={takenOrder} />}
+          {state === "failed" && (
+            <div className="mt-1 flex gap-3 text-xs">
+              <button
+                type="button"
+                onClick={onRetry}
+                className="inline-flex items-center gap-1 text-accent hover:underline"
+              >
+                <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
+                Réessayer
+              </button>
+              <button
+                type="button"
+                onClick={onDiscard}
+                className="inline-flex items-center gap-1 text-muted hover:text-foreground"
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Supprimer
+              </button>
+            </div>
+          )}
+        </div>
+      </article>
+    </div>
   );
 }
 
