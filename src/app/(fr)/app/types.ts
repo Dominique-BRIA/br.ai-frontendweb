@@ -51,7 +51,7 @@ export interface Message {
 
 export interface MemoryItem {
   id: string;
-  type: "decision" | "question" | "task" | "compromise";
+  type: "decision" | "question" | "task" | "compromise" | "knowledge";
   status: "open" | "resolved" | "stopped";
   text: string;
   createdAt: string;

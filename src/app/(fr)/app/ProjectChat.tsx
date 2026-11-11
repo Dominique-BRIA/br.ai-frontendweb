@@ -46,6 +46,7 @@ const MEMORY_TITLES: Record<MemoryItem["type"], string> = {
   question: "Questions ouvertes",
   task: "Tâches",
   compromise: "Compromis",
+  knowledge: "Connaissances",
 };
 
 const time = (iso: string) =>
@@ -670,7 +671,11 @@ export function ProjectChat() {
                             key={item.id}
                             className="rounded-xl bg-card p-3 text-sm ring-1 ring-border"
                           >
-                            {item.text}
+                            {item.type === "knowledge" ? (
+                              <Markdown text={item.text} />
+                            ) : (
+                              item.text
+                            )}
                           </li>
                         ))}
                       </ul>
