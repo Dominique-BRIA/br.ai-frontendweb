@@ -20,11 +20,27 @@ async function relay(
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token)
     return Response.json({ code: "unauthenticated" }, { status: 401 });
-  const body = request.method === "GET" ? undefined : await request.text();
+  // Un fichier envoyé passe tel quel, avec son nom et son type ; le reste est du JSON.
+  const binary =
+    request.headers.get("Content-Type") === "application/octet-stream";
+  const forwarded: Record<string, string> = {};
+  if (binary) {
+    forwarded["Content-Type"] = "application/octet-stream";
+    for (const name of ["x-file-name", "x-file-type"]) {
+      const value = request.headers.get(name);
+      if (value) forwarded[name] = value;
+    }
+  }
+  const body =
+    request.method === "GET"
+      ? undefined
+      : binary
+        ? await request.arrayBuffer()
+        : (await request.text()) || undefined;
   const response = await memberBackend(
     `${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`,
     token,
-    { method: request.method, body: body || undefined },
+    { method: request.method, body, headers: forwarded },
   ).catch(() => null);
   if (!response) return unreachable();
   // Les pièces jointes gardent leur nom et leurs protections en passant par le relais.

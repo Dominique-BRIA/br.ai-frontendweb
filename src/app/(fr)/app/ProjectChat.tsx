@@ -60,7 +60,14 @@ const day = (iso: string) =>
   }).format(new Date(iso));
 
 /** Un message parti de la page, pas encore enregistré par le serveur. */
+/** Vercel refuse les requêtes de plus de 4,5 Mo : au-delà, l'envoi passe par VS Code. */
+const WEB_UPLOAD_MAX = 4 * 1024 * 1024;
+const MAX_FILES = 10;
+const ACCEPTED =
+  ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.odp,.ods,.txt,.md,.csv,.json,.html,.png,.jpg,.jpeg,.gif,.webp,.zip";
+
 interface Outgoing {
+  attachments: Message["attachments"];
   clientId: string;
   body: string;
   mentions: string[];
@@ -99,6 +106,56 @@ export function ProjectChat() {
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [outgoing, setOutgoing] = useState<Outgoing[]>([]);
+  const [pending, setPending] = useState<Message["attachments"]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  /** Envoie les fichiers choisis ; ils partent avec le prochain message. */
+  const attach = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setError(null);
+    const room = MAX_FILES - pending.length;
+    const chosen = Array.from(files).slice(0, Math.max(0, room));
+    if (chosen.length < files.length) {
+      setError(`${MAX_FILES} fichiers au plus par message.`);
+    }
+    setUploading(true);
+    try {
+      for (const file of chosen) {
+        if (file.size > WEB_UPLOAD_MAX) {
+          setError(
+            `« ${file.name} » dépasse 4 Mo : envoie-le depuis VS Code, qui accepte 20 Mo.`,
+          );
+          continue;
+        }
+        const response = await fetch(
+          `/api/app/projects/${projectId}/attachments`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/octet-stream",
+              "x-file-name": encodeURIComponent(file.name),
+              "x-file-type": file.type || "application/octet-stream",
+            },
+            body: file,
+          },
+        );
+        if (!response.ok) {
+          setError(`« ${file.name} » n'a pas pu être envoyé.`);
+          continue;
+        }
+        const { attachment } = (await response.json()) as {
+          attachment: Message["attachments"][number];
+        };
+        setPending((current) => [...current, attachment]);
+      }
+    } catch {
+      setError("Envoi du fichier impossible : vérifie ta connexion.");
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  };
   const [panel, setPanel] = useState<"memory" | "orders" | "files">("memory");
   const { orders } = useProjectOrders(projectId);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -221,6 +278,7 @@ export function ProjectChat() {
           body: {
             body: item.body,
             mentions: item.mentions,
+            attachmentIds: item.attachments.map((file) => file.id),
             ...(item.replyTo ? { replyToId: item.replyTo.id } : {}),
           },
         },
@@ -244,7 +302,7 @@ export function ProjectChat() {
   const send = (event?: FormEvent) => {
     event?.preventDefault();
     const body = draft.trim();
-    if (!body) return;
+    if ((!body && pending.length === 0) || uploading) return;
     const lower = body.toLowerCase();
     const mentions = (team?.members ?? [])
       .filter((member) => member.userId !== myUserId)
@@ -255,6 +313,7 @@ export function ProjectChat() {
     const item: Outgoing = {
       clientId: crypto.randomUUID(),
       body,
+      attachments: pending,
       mentions,
       replyTo: replyTo
         ? {
@@ -269,6 +328,7 @@ export function ProjectChat() {
     atBottom.current = true;
     setOutgoing((current) => [...current, item]);
     setDraft("");
+    setPending([]);
     setReplyTo(null);
     void submit(item);
   };
@@ -388,7 +448,7 @@ export function ProjectChat() {
                 body: item.body,
                 replyTo: item.replyTo,
                 mentions: item.mentions,
-                attachments: [],
+                attachments: item.attachments,
                 createdAt: item.createdAt,
               }}
               myUserId={myUserId}
@@ -444,7 +504,63 @@ export function ProjectChat() {
               ))}
             </div>
           )}
+          {(pending.length > 0 || uploading) && (
+            <ul className="mb-2 flex flex-wrap gap-2">
+              {pending.map((file) => (
+                <li
+                  key={file.id}
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-card px-2 py-1 text-sm ring-1 ring-border"
+                >
+                  <Paperclip
+                    className="h-3.5 w-3.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPending((current) =>
+                        current.filter((entry) => entry.id !== file.id),
+                      )
+                    }
+                    title={`Retirer ${file.name}`}
+                    className="text-muted hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="sr-only">Retirer {file.name}</span>
+                  </button>
+                </li>
+              ))}
+              {uploading && (
+                <li className="inline-flex items-center gap-1.5 px-2 py-1 text-sm text-muted">
+                  <LoaderCircle
+                    className="h-3.5 w-3.5 animate-spin"
+                    aria-hidden="true"
+                  />
+                  Envoi du fichier…
+                </li>
+              )}
+            </ul>
+          )}
           <div className="flex items-end gap-2">
+            <input
+              ref={fileInput}
+              type="file"
+              multiple
+              accept={ACCEPTED}
+              className="hidden"
+              onChange={(event) => void attach(event.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              disabled={uploading || pending.length >= MAX_FILES}
+              title="Joindre un document (l'IA peut le lire)"
+              className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-field text-muted transition hover:text-foreground disabled:opacity-50"
+            >
+              <Paperclip className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">Joindre un document</span>
+            </button>
             <textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -456,7 +572,7 @@ export function ProjectChat() {
             />
             <button
               type="submit"
-              disabled={!draft.trim()}
+              disabled={(!draft.trim() && pending.length === 0) || uploading}
               title="Envoyer"
               aria-busy={sending}
               className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition hover:brightness-110 disabled:opacity-40"

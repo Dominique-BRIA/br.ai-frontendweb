@@ -18,6 +18,7 @@ interface ProjectFile {
   size: number;
   createdAt: string;
   uploadedBy: string | null;
+  hasText?: boolean;
 }
 
 interface Entry {
@@ -185,7 +186,20 @@ export function FilesPanel({ projectId }: { projectId: string }) {
               ) : (
                 <span />
               )}
-              <Links name={file.name} download={url} view={`${url}?view=1`} />
+              <span className="flex items-center gap-3">
+                {file.hasText && (
+                  <a
+                    href={`${url}/text?view=1`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Le texte que l'IA lit dans ce document"
+                    className={`${linkClass} text-xs`}
+                  >
+                    Texte lu par l'IA
+                  </a>
+                )}
+                <Links name={file.name} download={url} view={`${url}?view=1`} />
+              </span>
             </div>
             {expanded && (
               <div className="mt-2 border-t border-border pt-2">

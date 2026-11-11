@@ -34,14 +34,23 @@ export function visitorOf(request: Request): string {
 export function memberBackend(
   path: string,
   token: string | null,
-  init: { method?: string; body?: string; visitor?: string } = {},
+  init: {
+    method?: string;
+    body?: string | ArrayBuffer;
+    visitor?: string;
+    /** En-têtes propres à la requête, comme le nom d'un fichier envoyé. */
+    headers?: Record<string, string>;
+  } = {},
 ): Promise<Response> {
   const relayKey = process.env.SITE_RELAY_KEY;
   return fetch(`${BACKEND_URL}/${path}`, {
     method: init.method ?? "GET",
     body: init.body,
     headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(typeof init.body === "string"
+        ? { "Content-Type": "application/json" }
+        : {}),
+      ...init.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init.visitor && relayKey
         ? { "x-bria-site-key": relayKey, "x-bria-visitor": init.visitor }
